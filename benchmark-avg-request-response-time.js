@@ -35,7 +35,7 @@ async function fetchFromEndpointXTimes(fetchCallback, x) {
   };
 }
 
-// Everything after "=>" came from "Copy as fetch (Node.js)" in the browser Network tab
+// TODO: replace everything after "=>" with the result of "Copy as fetch (Node.js)" in the browser Network tab
 const internalMapAppPerturbationsEndpointSearchForLetterS = () => fetch("https://catalyst.rxrx.io/phenoapp/api/v0/perturbations?concentration_compound_range=0,10&concentration_sf_range=1e-9,0.1&filter_tags=&gene_expression_threshold=-3&group_label=HUVEC-tvn_v16_prox_bias_reduced-DL2-2024-05-13&ignore_gene_threshold=false&include_control_wells=false&pairwise=false&perturbations=&pvalue=0.01&search=s&split_by=", {
   "headers": {
     "accept": "application/json",
