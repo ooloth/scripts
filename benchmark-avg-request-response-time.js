@@ -7,7 +7,7 @@
  * @param {number} x - The number of times the fetch operation should be performed.
  * @returns {Promise<{averageResponseTime: number, errors: number}>} - The average response time and number of errors.
  */
-async function fetchFromEndpointXTimes(fetchCallback, x) {
+async function fetchFromEndpointXTimes(fetchCallback, x = 10) {
   let totalResponseTime = 0;
   let errors = 0;
 
