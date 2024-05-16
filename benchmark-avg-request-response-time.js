@@ -39,10 +39,12 @@ async function fetchFromEndpointXTimes(fetchCallback, x = 10) {
 // TODO: click "Copy as fetch (Node.js)" in the browser Network tab + paste here */
 const fetchCallback = () => fetch('...')
 
-fetchFromEndpointXTimes(internalMapAppPerturbationsEndpointSearchForLetterS, 50)
+const x = 50
+
+fetchFromEndpointXTimes(fetchCallback, x)
   .then(results => {
     console.log('\nAverage response time:', results.averageResponseTime, 'ms');
-    console.log('Number of errors:', results.errors);
+    console.log('Error rate:', results.errors / x, '%');
   })
   .catch(error => {
     console.error('An error occurred:', error);
