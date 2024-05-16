@@ -8,7 +8,7 @@
  * @returns {Promise<{averageResponseTime: number, errors: number}>} - The average response time and number of errors.
  */
 async function fetchFromEndpointXTimes(fetchCallback, x = 10) {
-  let totalResponseTime = 0;
+  let totalDuration = 0;
   let errors = 0;
 
   console.info() // blank line after prompt for better readability
@@ -19,10 +19,11 @@ async function fetchFromEndpointXTimes(fetchCallback, x = 10) {
       const response = await fetchCallback();
       const endTime = Date.now();
 
-      const responseTime = endTime - startTime;
-      totalResponseTime += responseTime;
+      const duration = endTime - startTime;
+      totalDuration += duration;
 
-      console.info('Status:', response?.status, '/', 'Duration:', responseTime, 'ms', '/', 'Total queries:', i + 1, );
+      console.info('Status:', response?.status, '/', 'Duration:', duration, 'ms', '/', 'Total queries:', i + 1, );
+      // console.info('Attempt', i + 1, 'Status:', response?.status, '/', 'Duration:', duration, 'ms', '/');
     } catch (err) {
       console.error('Error: ', err);
       errors++;
@@ -30,7 +31,7 @@ async function fetchFromEndpointXTimes(fetchCallback, x = 10) {
   }
 
   return {
-    averageResponseTime: totalResponseTime / x,
+    averageResponseTime: totalDuration / x,
     errors,
   };
 }
