@@ -1,5 +1,7 @@
 // @ts-check
 
+// TODO: migrate to TypeScript via Deno 2?
+
 /**
  * Fetches data from an endpoint X times and tracks response times.
  *
