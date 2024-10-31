@@ -35,7 +35,19 @@ fetch_subscriptions() {
 }
 
 subscriptions=$(fetch_subscriptions)
-echo "Subscriptions: $subscriptions"
+
+# Print subscriptions in a readable format
+echo "$subscriptions" | jq '.[] | {feed_id: .feed_id, title: .title, site_url: .site_url, feed_url: .feed_url}'
+
+# Remove trailing slash from input URL
+input_url=$(echo "$1" | sed 's/\/$//')
+
+# Compare input URL to each site_url while ignoring trailing slashes
+matching_feed=$(echo "$subscriptions" | jq --arg input_url "$input_url" '.[] | select(.site_url | rtrimstr("/") == $input_url) | {feed_id: .feed_id, site_url: .site_url}')
+echo "Matching feed: $matching_feed"
+
+matching_feed_id=$(echo "$matching_feed" | jq '.feed_id')
+echo "Matching feed ID: $matching_feed_id"
 
 # curl -u "$FEEDBIN_USERNAME:$FEEDBIN_PASSWORD" "$FEEDBIN_API/feeds.json" | jq '.[] | {id: .id, feed_url: .feed_url}'
 
