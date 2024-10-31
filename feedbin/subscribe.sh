@@ -1,51 +1,48 @@
 #!/usr/bin/env bash
 
-# Overall goal: Add a new RSS feed to Feedbin and mark its entire backlog as unread
-
-# Requirements:
-# - Feedbin account
-# - Feedbin username and password
-# - Feedbin API key
+# Subscribe to a new RSS feed in Feedbin and mark its entire backlog as unread
 
 # Usage:
 # - ./subscribe.sh https://example.com
 # - ./subscribe.sh
 
 # Docs:
-# - https://github.com/feedbin/feedbin-api
+# - https://github.com/feedbin/feedbin-api/blob/master/content/subscriptions.md#create-subscription
 
 set -euo pipefail
 
-# Check if a URL was provided as an argument
-if [ -z "$1" ]; then
-    echo "No URL provided. Please provide a URL to subscribe to."
-    exit 1
-fi
+source feedbin/validation.sh
+source feedbin/subscriptions.sh
 
-# Extract the domain from the URL
-DOMAIN=$(echo "$1" | awk -F/ '{print $3}')
-echo "Domain: $DOMAIN"
+main() {
+  local url="$1"
+  validate_url_arg "$url"
 
-# Set the Feedbin username and password
-# Fetch credentials from 1Password
-FEEDBIN_USERNAME=$(op item get "Feedbin" --field username)
-FEEDBIN_PASSWORD=$(op item get "Feedbin" --field password)
-echo "Feedbin username: $FEEDBIN_USERNAME"
-echo "Feedbin password: $FEEDBIN_PASSWORD"
+  echo "📥 Fetching my Feedbin subscriptions"
+  subscriptions=$(fetch_subscriptions)
+  # print_subscriptions "$subscriptions"
 
-FEEDBIN_API="https://api.feedbin.com/v2"
+  echo "🔍 Checking for an existing subscription to '$url'"
+  matching_subscription=$(find_matching_subscription "$url" "$subscriptions")
 
-# Extract and print URL suffixes
-# echo "$subscriptions" | jq -r '.[] | "\(.site_url) \(.feed_url)"' | while read -r site_url feed_url; do
-#   # Remove site_url prefix from feed_url to get the suffix
-#   suffix=${feed_url#"$site_url"}
-#   echo "$suffix"
-# done
+  if [[ "$matching_subscription" ]]; then
+    echo "✅ I'm already subscribed to '$url'"
+    # echo "$matching_subscription"
+    exit 0
+  fi
 
-# Subscribe to the feed using the Feedbin API
-# curl -u "$FEEDBIN_USERNAME:$FEEDBIN_PASSWORD" -X POST "$FEEDBIN_API/subscriptions.json" -d "feed_url=$1" -d "api_key=$FEEDBIN_API_KEY"
+  echo "🔖 No matching subscription found. Subscribing now..."
+  response=$(create_subscription "$url")
+  echo "Response: $response"
+  http_code=${response: -3}  # get the last 3 digits
+  echo "HTTP code: $http_code"
 
-# Mark the entire backlog of the feed as unread
-# curl -u "$FEEDBIN_USERNAME:$FEEDBIN_PASSWORD" -X POST "$FEEDBIN_API/unread_entries.json" -d "feed_id=$DOMAIN" -d "api_key=$FEEDBIN_API_KEY"
+  # TODO: carry on
 
-echo "Subscribed to $1 and marked entire backlog as unread."
+  # matching_feed_id=$(echo "$matching_subscription" | jq '.feed_id')
+  # echo "Matching feed ID: $matching_feed_id"
+
+  # echo "Subscribed to $1 and marked entire backlog as unread."
+}
+
+main "$1"

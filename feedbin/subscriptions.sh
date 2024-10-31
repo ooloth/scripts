@@ -2,62 +2,63 @@
 
 # Overall goal: Find out if I've already subscribed to a feed in Feedbin
 
-# Requirements:
-# - Feedbin account
-# - Feedbin username and password
-
 # Usage:
-# - ./feeds.sh https://example.com
-# - ./feeds.sh
+# - ./subscriptions.sh https://example.com
+# - ./subscriptions.sh
 
 # Docs:
-# - https://github.com/feedbin/feedbin-api/blob/master/content/feeds.md
+# - https://github.com/feedbin/feedbin-api/blob/master/content/subscriptions.md
 
 set -euo pipefail
 
-# Check if a URL was provided as an argument
-if [ -z "$1" ]; then
-  echo "No URL provided. Please provide a URL to check."; exit 1
-fi
-
-# Extract the domain from the URL
-DOMAIN=$(echo "$1" | awk -F/ '{print $3}')
-echo "Domain: $DOMAIN"
-
-# Fetch credentials from 1Password
 USERNAME=$(op item get "Feedbin" --field username)
 PASSWORD=$(op item get --reveal "Feedbin" --field password)
-
 API="https://api.feedbin.com/v2"
 
 fetch_subscriptions() {
-  curl -u "$USERNAME:$PASSWORD" "$API/subscriptions.json"
+  curl -s -u "$USERNAME:$PASSWORD" "$API/subscriptions.json"
 }
 
-subscriptions=$(fetch_subscriptions)
+print_subscriptions() {
+  echo "$1" | jq '.[] | {feed_id: .feed_id, title: .title, site_url: .site_url, feed_url: .feed_url}'
+}
 
-# Print subscriptions in a readable format
-echo "$subscriptions" | jq '.[] | {feed_id: .feed_id, title: .title, site_url: .site_url, feed_url: .feed_url}'
+find_matching_subscription() {
+  local url="$1"
+  local subscriptions="$2"
 
-# Remove trailing slash from input URL
-input_url=$(echo "$1" | sed 's/\/$//')
+  url_without_trailing_slash=$(echo "$url" | sed 's/\/$//')
 
-# Compare input URL to each site_url while ignoring trailing slashes
-matching_feed=$(echo "$subscriptions" | jq --arg input_url "$input_url" '.[] | select(.site_url | rtrimstr("/") == $input_url) | {feed_id: .feed_id, site_url: .site_url}')
-echo "Matching feed: $matching_feed"
+  # Compare the input URL to each site_url, disregarding trailing slashes
+  echo "$subscriptions" | jq --arg input_url "$url_without_trailing_slash" \
+  '.[] | select(.site_url | rtrimstr("/") == $input_url) | {feed_id: .feed_id, site_url: .site_url}'
+}
 
-matching_feed_id=$(echo "$matching_feed" | jq '.feed_id')
-echo "Matching feed ID: $matching_feed_id"
+# See: https://github.com/feedbin/feedbin-api/blob/master/content/subscriptions.md#create-subscription
+create_subscription() {
+  local url="$1"
 
-# curl -u "$FEEDBIN_USERNAME:$FEEDBIN_PASSWORD" "$FEEDBIN_API/feeds.json" | jq '.[] | {id: .id, feed_url: .feed_url}'
+  response=$(curl -v -u "$USERNAME:$PASSWORD" \
+  -H "Content-Type: application/json; charset=utf-8" \
+  -X POST -d "{\"feed_url\": \"$url\"}" "$API/subscriptions.json")
 
-# Check if the feed already exists and return its ID
-# matching_feed=""
-# matching_feed=$("$response" | jq '.[] | select(.feed_url == "$1") | {id: .id, feed_url: .feed_url}')
-# echo "Matching feed: $matching_feed"
+  echo "$response"
 
-# if [ -z "$matching_feed" ]; then
-#     echo "Feed not found."
-# else
-#     echo "Feed found."
-# fi
+  # If the response includes multiple items, the user needs to choose which feed URL to subscribe to
+  # if [[ $(echo "$response" | jq '. | length') -gt 1 ]]; then
+  #   echo "Multiple feeds found. Please choose one:"
+  #   # Display options with numbers
+  #   echo "$response" | jq -r '.[] | "\(.title) \(.feed_url)"' | nl -w 2 -s '. '
+
+  #   # Read user choice
+  #   read -pr "Enter the number of the feed you want to subscribe to: " choice
+
+  #   # Get the selected feed URL
+  #   feed_url=$(echo "$response" | jq -r --argjson choice "$choice" '.[$choice - 1] | .feed_url')
+
+  #   echo "Selected feed URL: $feed_url"
+  # else
+  #   # If only one feed is found, automatically select it
+  #   feed_url=$(echo "$response" | jq -r '.[0] | .feed_url')
+  # fi
+}
