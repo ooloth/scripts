@@ -1,0 +1,9 @@
+{
+  "recommendations": [
+    "bmalehorn.print-it",
+    "charliermarsh.ruff",
+    "denoland.vscode-deno",
+    "foxundermoon.shell-format",
+    "rogalmic.bash-debug"
+  ]
+}

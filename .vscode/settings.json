@@ -1,0 +1,20 @@
+{
+  "[python]": {
+    "editor.codeActionsOnSave": {
+      "source.fixAll": "explicit",
+      "source.organizeImports": "explicit"
+    },
+    "editor.defaultFormatter": "charliermarsh.ruff"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "denoland.vscode-deno"
+  },
+  "deno.enable": true,
+  "editor.formatOnSave": true,
+  "files.associations": {
+    "**/bin/*": "shellscript",
+  },
+  "print-it.python.template": "log(\"{{escaped}}:\", {{raw}})",
+  "print-it.rust.template": "eprintln!(\"{{escaped}}={:?}\", {{raw}});",
+  "print-it.typescript.template": "console.warn('{{escaped}} =', {{raw}})",
+}
