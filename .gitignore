@@ -1,3 +1,6 @@
-node_modules/
+# Theirs
+*.pyc
+
+# Mine
 .env
 .local_cache/*
