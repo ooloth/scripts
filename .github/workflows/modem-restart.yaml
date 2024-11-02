@@ -5,12 +5,18 @@ on: push
 #   schedule:
 #     - cron: "0 */3 * * *"  # every 3 hours
 
+env:
+  DRY_RUN: "true"
+
 jobs:
   modem-restart:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
 
+    steps:
+      # See: https://github.com/actions/checkout
+      - uses: actions/checkout@v4
+
+      # See: https://github.com/1Password/load-secrets-action
       - name: Load secret
         uses: 1password/load-secrets-action@v2
         with:
@@ -20,6 +26,27 @@ jobs:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           SECRET: op://Scripts/1Password Service Account/credential
 
-      - name: Print masked secret
-        run: 'echo "Secret: $SECRET"'
-        # Prints: Secret: ***
+        # See: https://docs.astral.sh/uv/guides/integration/github/
+      - name: Install uv and enable caching
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Set up Python
+        run: uv python install
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: "pyproject.toml"
+
+      - name: Install the project
+        run: uv sync --all-extras --dev
+
+      # TODO: narrow to the relevant tests for this action
+      # - name: Run tests
+        # run: uv run pytest tests
+
+      - name: Restart modem
+        run: uv run modem/restart.py
