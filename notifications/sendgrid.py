@@ -1,7 +1,7 @@
 from sendgrid.helpers.mail import Mail  # type: ignore
 from sendgrid.sendgrid import SendGridAPIClient  # type: ignore
 
-from op.items import get_secret
+from op.secrets import get_secret
 from utils.logs import log
 
 OP_ITEM = "SendGrid"

@@ -3,7 +3,7 @@ from datetime import datetime
 from playwright.sync_api import sync_playwright
 
 from notifications.sendgrid import send_email
-from op.items import get_secret
+from op.secrets import get_secret
 from utils.logs import log
 
 
