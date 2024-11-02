@@ -1,7 +1,12 @@
 on: push
 
+# on:
+#   # see: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#schedule
+#   schedule:
+#     - cron: "0 */3 * * *"  # every 3 hours
+
 jobs:
-  hello-world:
+  modem-restart:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -13,7 +18,7 @@ jobs:
           export-env: true
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-          SECRET: op://app-cicd/hello-world/secret
+          SECRET: op://Scripts/1Password Service Account/credential
 
       - name: Print masked secret
         run: 'echo "Secret: $SECRET"'
