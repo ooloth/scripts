@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 
 from playwright.sync_api import sync_playwright
@@ -8,6 +9,12 @@ from utils.logs import log
 
 
 def log_in_and_restart(password: str) -> None:
+    dry_run = os.getenv("DRY_RUN", False)
+
+    if dry_run:
+        log("👍 Skipping modem restart.")
+        return
+
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
@@ -34,7 +41,6 @@ def log_in_and_restart(password: str) -> None:
         page.click("button[id=yes]")
 
         log("✅ Modem is restarting.")
-        # log("👍 Skipping modem restart.")
 
         browser.close()
 
