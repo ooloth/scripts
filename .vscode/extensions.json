@@ -4,6 +4,7 @@
     "charliermarsh.ruff",
     "denoland.vscode-deno",
     "foxundermoon.shell-format",
+    "GitHub.vscode-github-actions",
     "rogalmic.bash-debug"
   ]
 }
