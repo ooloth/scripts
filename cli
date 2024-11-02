@@ -2,17 +2,7 @@
 
 set -euo pipefail
 
-# Computed environment variables (from 1Password)
-# TODO: make one op call for all items in the SA vault, then parse them?
-OP_SERVICE_ACCOUNT_TOKEN=$(op item get "1Password (Service Account)" --vault "Scripts" --field credential --reveal)
-
-export OP_SERVICE_ACCOUNT_TOKEN
 export PYTHONPATH="$PWD"
-
-echo "OP_SERVICE_ACCOUNT_TOKEN: $OP_SERVICE_ACCOUNT_TOKEN"
-
-# Confirm the service account token is set correctly
-# op user get --me
 
 printf "\nWhich script would you like to run? [#]\n\n"
 
