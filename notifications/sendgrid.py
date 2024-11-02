@@ -10,12 +10,11 @@ _client = None
 
 
 def get_client() -> SendGridAPIClient:
+    """Return a reusable SendGrid client."""
     global _client
 
-    if _client:
-        return _client
-
-    _client = SendGridAPIClient(api_key=get_secret(OP_ITEM, "api key"))
+    if _client is None:
+        _client = SendGridAPIClient(api_key=get_secret(OP_ITEM, "api key"))
 
     return _client
 
@@ -37,4 +36,4 @@ def send_email(subject: str, html: str) -> None:
         client.send(message)
         log("✅ Email sent successfully.")
     except Exception as e:
-        log("🚨 There was a problem sending that email:", e)
+        log("🚨 There was a problem sending the '{subject}' email:", e)
