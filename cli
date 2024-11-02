@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# Static environment variables (from .env)
+# See: https://gist.github.com/mihow/9c7f559807069a03e302605691f85572
+set -a && source .env && set +a
+
+# Computed environment variables (from 1Password)
+# TODO: make one op call for all items in the SA vault, then parse them?
+# OP_SERVICE_ACCOUNT_TOKEN=$(op item get "Service Account Auth Token: My Scripts" --field credential --reveal)
+# SENDGRID_API_KEY=$(op item get "SendGrid" --field "api key" --vault "My Scripts" --reveal)
+
+# export OP_SERVICE_ACCOUNT_TOKEN
+# export PYTHONPATH="$PWD"
+# export SENDGRID_API_KEY
+
+# Confirm the service account token is set correctly
+# op user get --me
+
+printf "\nWhich script would you like to run? [#]\n\n"
+
+scripts=("modem/restart.py")
+
+select script in "${scripts[@]}"; do
+  [[ -n "$script" ]] && uv run "$script" || echo "No script selected."
+  break
+done
