@@ -1,5 +1,4 @@
 import subprocess
-from typing import Literal
 
 # Docs (service accounts):
 # - https://developer.1password.com/docs/service-accounts/get-started/
@@ -10,14 +9,24 @@ from typing import Literal
 # - https://github.com/1Password/onepassword-sdk-python/blob/main/example/example.py
 # - https://developer.1password.com/docs/cli/reference/
 
-SERVICE_ACCOUNT_VAULT = "Scripts"
-
-Field = Literal["username", "password", "credential"]
+VAULT = "Scripts"
 
 
-def get_secret_by_reference(secret_reference: str | None) -> str:
-    if not secret_reference:
-        raise ValueError("A secret reference is required")
+def build_secret_reference(item: str, field: str) -> str:
+    """
+    Generate a 1Password secret reference.
+
+    See: https://developer.1password.com/docs/cli/secret-reference-syntax#a-field-without-a-section
+    """
+    return f"op://{VAULT}/{item}/{field}"
+
+
+def get_secret(item: str, field: str) -> str:
+    """
+    Generates a 1Password secret reference and retrieves the secret value.
+    """
+    secret_reference = build_secret_reference(item, field)
+    # log("secret_reference:", secret_reference)
 
     result = subprocess.run(
         ["op", "read", secret_reference],
@@ -26,13 +35,3 @@ def get_secret_by_reference(secret_reference: str | None) -> str:
         check=True,
     )
     return result.stdout.strip()
-
-
-# def get_item_field_value(item: str, field: Field) -> str:
-#     result = subprocess.run(
-#         ["op", "item", "get", item, "--field", field, "--vault", SERVICE_ACCOUNT_VAULT, "--reveal"],
-#         capture_output=True,
-#         text=True,
-#         check=True,
-#     )
-#     return result.stdout.strip()
