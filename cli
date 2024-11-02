@@ -8,11 +8,12 @@ set -a && source .env && set +a
 
 # Computed environment variables (from 1Password)
 # TODO: make one op call for all items in the SA vault, then parse them?
-# OP_SERVICE_ACCOUNT_TOKEN=$(op item get "Service Account Auth Token: My Scripts" --field credential --reveal)
-# SENDGRID_API_KEY=$(op item get "SendGrid" --field "api key" --vault "My Scripts" --reveal)
+OP_SERVICE_ACCOUNT_TOKEN=$(op item get "1Password (Service Account)" --vault "Scripts" --field credential --reveal)
 
-# export OP_SERVICE_ACCOUNT_TOKEN
-# export PYTHONPATH="$PWD"
+export OP_SERVICE_ACCOUNT_TOKEN
+export PYTHONPATH="$PWD"
+
+echo "OP_SERVICE_ACCOUNT_TOKEN: $OP_SERVICE_ACCOUNT_TOKEN"
 # export SENDGRID_API_KEY
 
 # Confirm the service account token is set correctly

@@ -1,15 +1,11 @@
+import os
 from datetime import datetime
 
 from playwright.sync_api import sync_playwright
 
 from notifications.sendgrid import send_email
-from op.items import get_item_field_value
+from op.items import get_secret_by_reference
 from utils.logs import log
-
-# TODO: deploy to GitHub Actions!
-
-OP_ITEM = "Modem & Router"
-MODEM_URL = "http://192.168.2.1"
 
 
 def log_in_and_restart(password: str) -> None:
@@ -18,7 +14,7 @@ def log_in_and_restart(password: str) -> None:
         page = browser.new_page()
 
         # Log in
-        page.goto(MODEM_URL)
+        page.goto("http://192.168.2.1")
         page.click("button[id=headerLogin]")
         page.wait_for_selector("input[name=admin-password]")
         page.fill("input[name=admin-password]", password)
@@ -43,8 +39,7 @@ def log_in_and_restart(password: str) -> None:
 
 
 def main() -> None:
-    # TODO: should this also be an environment variable? or should all credentials be pulled from op at runtime like this?
-    password = get_item_field_value(OP_ITEM, "password")
+    password = get_secret_by_reference(os.environ.get("OP_SECRET_REFERENCE_MODEM_PASSWORD"))
     restart_time = datetime.now().strftime("on %A at %I:%M %p")
 
     try:
