@@ -8,7 +8,7 @@ from op.secrets import get_secret
 from utils.logs import log
 
 
-def log_in_and_restart(password: str) -> None:
+def log_in_and_restart(url: str, password: str) -> None:
     dry_run = os.getenv("DRY_RUN", False)
 
     if dry_run == "true":
@@ -21,7 +21,7 @@ def log_in_and_restart(password: str) -> None:
         page = browser.new_page()
 
         # Log in
-        page.goto("http://192.168.2.1")
+        page.goto(url)
         page.click("button[id=headerLogin]")
         page.wait_for_selector("input[name=admin-password]")
         page.fill("input[name=admin-password]", password)
@@ -47,11 +47,12 @@ def log_in_and_restart(password: str) -> None:
 
 
 def main() -> None:
+    modem_url = get_secret("Modem", "website")
     modem_password = get_secret("Modem", "password")
     restart_time = datetime.now().strftime("%A at %I:%M %p")
 
     try:
-        log_in_and_restart(modem_password)
+        log_in_and_restart(modem_url, modem_password)
         send_email("✅ Modem restarted", f"<p>Modem restarted {restart_time}.</p>")
     except Exception as e:
         log("🚨 Modem restart failed:", e)
