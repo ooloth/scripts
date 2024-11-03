@@ -52,7 +52,8 @@ jobs:
           oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
           tags: tag:ci
 
-      - name: Verify Tailscale connection
+      # See: https://www.youtube.com/watch?v=UmVMaymH1-s
+      - name: Verify Tailscale subnet route access
         run: tailscale ping 192.168.2.1
 
       - name: Download Playwright browsers
