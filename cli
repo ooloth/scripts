@@ -2,7 +2,6 @@
 
 set -euo pipefail
 
-# TODO: add a "dry run" mode for logging script side effects instead of executing them?
 export DRY_RUN=${DRY_RUN:-false}
 export PYTHONPATH="$PWD"
 

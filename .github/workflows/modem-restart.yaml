@@ -1,12 +1,18 @@
-on: push
-
-# on:
-#   # see: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#schedule
-#   schedule:
-#     - cron: "0 */3 * * *"  # every 3 hours
+on:
+  # see: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#schedule
+  schedule:
+            # ┌───────────── minute (0 - 59)
+            # │  ┌───────────── hour (0 - 23) in UTC time
+            # │  │ ┌───────────── day of the month (1 - 31)
+            # │  │ │ ┌───────────── month (1 - 12 or JAN-DEC)
+            # │  │ │ │ ┌───────────── day of the week (0 - 6 or SUN-SAT)
+            # │  │ │ │ │
+            # │  │ │ │ │
+            # │  │ │ │ │
+    - cron: "30 12 * * *"  # every day at 12:30 PM UTC (8:30 AM EDT, 7:30 AM EST)
 
 env:
-  DRY_RUN: "true"
+  DRY_RUN: "false"
 
 jobs:
   modem-restart:
