@@ -10,9 +10,9 @@ from utils.logs import log
 
 def log_in_and_restart(password: str) -> None:
     dry_run = os.getenv("DRY_RUN", False)
-    log("dry_run:", dry_run)
 
     if dry_run == "true":
+        log("🌵 This is a dry run.")
         log("👍 Skipping modem restart.")
         return
 
