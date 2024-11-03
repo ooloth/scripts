@@ -45,6 +45,16 @@ jobs:
       - name: Download Playwright browsers
         run: uv run playwright install --with-deps
 
+      # See: https://github.com/marketplace/actions/connect-tailscale
+      # See: https://tailscale.com/kb/1215/oauth-clients
+      # See: https://www.youtube.com/watch?v=WXCokV-FeFw
+      - name: Tailscale
+        uses: tailscale/github-action@v2
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
+
       - name: Restart modem
         run: uv run modem/restart.py
         env:
