@@ -8,5 +8,6 @@ Feel free to copy anything you find useful, but don't rely on anything here rema
 
 ## 🤫 Secrets
 
-- These scripts rely on one [repository secret](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions#creating-secrets-for-a-repository) named `OP_SERVICE_ACCOUNT_TOKEN` that is used in GitHub Actions workflows
-- All other secrets are stored in 1Password and [references to their 1Password locations](https://developer.1password.com/docs/cli/secret-reference-syntax/) are stored as environment variables to avoid storing the actual secret values as plain text anywhere.
+- To avoid ever exposing the secrets used by these scripts as plain text (e.g. in a local `.env` file), they are stored in 1Password and [referenced](https://developer.1password.com/docs/cli/secret-reference-syntax/) by their location in the vault my 1Password service account has access to
+- To run these scripts as GitHub Actions workflows, one [repository secret](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions#creating-secrets-for-a-repository) named `OP_SERVICE_ACCOUNT_TOKEN` is needed to provide the service account token to the 1Password CLI
+- Locally, the 1Password CLI authenticates me by asking for my fingerprint
