@@ -24,9 +24,6 @@ jobs:
           cache-dependency-glob: uv.lock
 
       - name: Set up Python
-        run: uv python install
-
-      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version-file: pyproject.toml
@@ -41,16 +38,6 @@ jobs:
       # TODO: narrow to the relevant tests for this action
       # - name: Run tests
         # run: uv run pytest tests
-
-      # # See: https://github.com/1Password/load-secrets-action
-      # - name: Load secret
-      #   uses: 1password/load-secrets-action@v2
-      #   with:
-      #     # Export loaded secrets as environment variables
-      #     export-env: true
-      #   env:
-      #     OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-      #     SECRET: op://Scripts/1Password Service Account/credential
 
       # See: https://github.com/1Password/install-cli-action
       - name: Install 1Password CLI
