@@ -43,7 +43,7 @@ jobs:
         uses: 1password/install-cli-action@v1
 
       - name: Download Playwright browsers
-        run: uv run playwright install
+        run: uv run playwright install --with-deps
 
       - name: Restart modem
         run: uv run modem/restart.py
