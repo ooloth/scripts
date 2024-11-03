@@ -54,10 +54,10 @@ def main() -> None:
         log_in_and_restart(modem_password)
         send_email("✅ Modem restarted", f"<p>Modem restarted {restart_time}.</p>")
     except Exception as e:
-        log("🚨 Error while restarting the modem:", e)
+        log("🚨 Modem restart failed:", e)
         send_email(
             "🚨 Modem restart failed",
-            f"<p>The modem failed to restart {restart_time}:</p><br /><pre>{str(e)}</pre>",
+            f"<p>The modem failed to restart {restart_time}.</p><hr /><p><strong>Error:</strong></p><pre>{str(e)}</pre>",
         )
 
 
