@@ -1,5 +1,7 @@
 # 👨‍💻 Scripts
 
+[![.github/workflows/modem-restart.yaml](https://github.com/ooloth/scripts/actions/workflows/modem-restart.yaml/badge.svg)](https://github.com/ooloth/scripts/actions/workflows/modem-restart.yaml)
+
 These scripts are highly experimental and subject to change and are intended for my personal use and learning.
 
 Feel free to copy anything you find useful, but don't rely on anything here remaining stable!
