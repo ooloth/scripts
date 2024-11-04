@@ -10,8 +10,8 @@ app = typer.Typer()
 console = Console()
 
 
-DEFAULT_DRY_RUN = "true"
 SCRIPTS = ["modem/restart"]
+DRY_RUN_DEFAULT = "false"
 
 
 def _get_scripts_table(scripts: list[str] = SCRIPTS) -> Table:
@@ -30,7 +30,7 @@ def _get_env() -> dict[str, str]:
     """Return updated environment variables to be used by the subprocess."""
     env = os.environ.copy()
 
-    env["DRY_RUN"] = env.get("DRY_RUN", DEFAULT_DRY_RUN)
+    env["DRY_RUN"] = env.get("DRY_RUN", DRY_RUN_DEFAULT)
     env["PYTHONPATH"] = Path(__file__).parent.absolute().as_posix()  # this project's root directory
 
     # log("env:", env)
