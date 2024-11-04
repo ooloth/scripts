@@ -14,7 +14,7 @@
   "files.associations": {
     "**/bin/*": "shellscript",
   },
-  "print-it.python.template": "log(\"{{escaped}}:\", {{raw}})",
-  "print-it.rust.template": "eprintln!(\"{{escaped}}={:?}\", {{raw}});",
-  "print-it.typescript.template": "console.warn('{{escaped}} =', {{raw}})",
+  "print-it.python.template": "log(\"🔍 {{escaped}} =\", {{raw}})",
+  "print-it.rust.template": "eprintln!(\"🔍 {{escaped}}={:?}\", {{raw}});",
+  "print-it.typescript.template": "console.warn('🔍 {{escaped}} =', {{raw}})",
 }
