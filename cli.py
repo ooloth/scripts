@@ -6,12 +6,22 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-app = typer.Typer()
+from feedbin import subscribe
+
+# from feedbin.subscribe import subscribe
+
+# Docs:
+# - https://typer.tiangolo.com/tutorial/subcommands/add-typer
+
+# TODO: add modem typer app as well
+app = typer.Typer(no_args_is_help=True)
+# app.add_typer(subscribe.app, name="feed")
+
 console = Console()
 
 
-SCRIPTS = ["modem/restart"]
 DRY_RUN_DEFAULT = "false"
+SCRIPTS = ["feedbin/subscribe", "modem/restart"]
 
 
 def _get_scripts_table(scripts: list[str] = SCRIPTS) -> Table:
@@ -45,8 +55,15 @@ def pick() -> None:
 
     if 1 <= script_number <= len(SCRIPTS):
         script = SCRIPTS[script_number - 1]
+
         typer.echo(f"🚀 Running '{script}'.")
-        subprocess.run(["uv", "run", f"{script}.py"], env=_get_env())
+
+        match script:
+            case "feedbin/subscribe":
+                url = typer.prompt("💬 What URL would you like to subscribe to?", type=str)
+                subscribe.add(url)
+            case _:
+                subprocess.run(["uv", "run", f"{script}.py"], env=_get_env())
     else:
         typer.echo("🚨 Invalid option '{script_number}'")
 
