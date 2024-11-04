@@ -8,13 +8,8 @@ from op.secrets import get_secret
 from utils.logs import log
 
 
-def log_in_and_restart(url: str, password: str) -> None:
+def _log_in_and_restart(url: str, password: str) -> None:
     dry_run = os.getenv("DRY_RUN", False)
-
-    if dry_run == "true":
-        log("🌵 This is a dry run.")
-        log("👍 Skipping modem restart.")
-        return
 
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
@@ -32,6 +27,10 @@ def log_in_and_restart(url: str, password: str) -> None:
         page.click("a[href=advancedtools]")
         page.wait_for_selector("a[href='advancedtools/resets']")
         page.click("a[href='advancedtools/resets']")
+
+        if dry_run == "true":
+            log("🌵 Dry run: skipped restarting modem.")
+            return
 
         # Restart modem and confirm twice
         page.wait_for_selector("button[id=restart]")
@@ -52,13 +51,13 @@ def main() -> None:
     restart_time = datetime.now().strftime("%A at %I:%M %p")
 
     try:
-        log_in_and_restart(modem_url, modem_password)
+        _log_in_and_restart(modem_url, modem_password)
         send_email("✅ Modem restarted", f"<p>Modem restarted {restart_time}.</p>")
     except Exception as e:
         log("🚨 Modem restart failed:", e)
         send_email(
             "🚨 Modem restart failed",
-            f"<p>The modem failed to restart {restart_time}.</p><hr /><p><strong>Error:</strong></p><pre>{str(e)}</pre>",
+            f"<p>Modem restart failed {restart_time}.</p><hr /><p><strong>Error:</strong></p><pre>{e}</pre>",
         )
 
 
