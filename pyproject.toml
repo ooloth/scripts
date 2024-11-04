@@ -10,6 +10,7 @@ dependencies = [
     "rich>=13.9.3",
     "ruff>=0.7.1",
     "sendgrid>=6.11.0",
+    "typer>=0.12.5",
 ]
 
 [tool.ruff]
