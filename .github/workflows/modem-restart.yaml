@@ -57,6 +57,7 @@ jobs:
         run: tailscale ping 192.168.2.1
 
       - name: Download Playwright browsers
+        # The GitHub Actions server looks for /home/runner/.cache/ms-playwright/chromium-1140/chrome-linux/chrome
         run: uv run playwright install chromium --with-deps
 
       - name: Restart modem
