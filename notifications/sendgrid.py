@@ -1,3 +1,5 @@
+import os
+
 from sendgrid.helpers.mail import Mail  # type: ignore
 from sendgrid.sendgrid import SendGridAPIClient  # type: ignore
 
@@ -24,6 +26,8 @@ def send_email(subject: str, html: str) -> None:
     Send an email with a standard heading and the given subject and HTML content.
     See: https://github.com/sendgrid/sendgrid-python/blob/main/use_cases/send_a_single_email_to_a_single_recipient.md
     """
+    dry_run = os.getenv("DRY_RUN", False)
+
     message = Mail(
         from_email=get_secret(OP_ITEM, "from email"),
         to_emails=get_secret(OP_ITEM, "to email"),
@@ -33,7 +37,12 @@ def send_email(subject: str, html: str) -> None:
 
     try:
         client = get_client()
+
+        if dry_run == "true":
+            log("🌵 Dry run: skipped emailing message:", message.get())
+            return
+
         client.send(message)
         log("✅ Email sent successfully.")
     except Exception as e:
-        log("🚨 There was a problem sending the '{subject}' email:", e)
+        log(f"🚨 There was a problem sending the '{subject}' email:", e)
