@@ -5,6 +5,7 @@
     "denoland.vscode-deno",
     "foxundermoon.shell-format",
     "GitHub.vscode-github-actions",
-    "rogalmic.bash-debug"
+    "rogalmic.bash-debug",
+    "tamasfe.even-better-toml"
   ]
 }

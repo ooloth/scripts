@@ -1,0 +1,8 @@
+# See: https://taplo.tamasfe.dev/configuration/formatter-options.html
+
+[formatting]
+  allowed_blank_lines = 1
+  indent_entries = true
+  indent_tables = true
+  indent_string = "  "
+  reorder_arrays = true

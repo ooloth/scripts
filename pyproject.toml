@@ -1,9 +1,10 @@
+# See: https://packaging.python.org/en/latest/guides/writing-pyproject-toml/
+
 [project]
-name = "scripts"
-description = "Quick solutions to small problems"
-requires-python = ">=3.13"
-version = "0.1.0"
-dependencies = [
+  name = "scripts"
+  description = "Quick solutions to small problems"
+  requires-python = ">=3.13"
+  dependencies = [
     "mypy>=1.13.0",
     "playwright>=1.48.0",
     "pydantic>=2.9.2",
@@ -12,20 +13,18 @@ dependencies = [
     "ruff>=0.7.1",
     "sendgrid>=6.11.0",
     "typer>=0.12.5",
-]
+  ]
 
 [tool.ruff]
-line-length = 120
+  line-length = 120
 
-[tool.ruff.lint]
-extend-select = [
-  "I" # enable isort rules in the CLI (see: https://github.com/astral-sh/ruff-vscode?tab=readme-ov-file#configuring-vs-code)
-]
-unfixable = [
-  "F401" # don't delete unused imports while fixing lint errors on save
-]
+  [tool.ruff.lint]
+    extend-select = [
+      "I", # enable isort rules in the CLI (see: https://github.com/astral-sh/ruff-vscode?tab=readme-ov-file#configuring-vs-code)
+    ]
+    unfixable = [
+      "F401", # don't delete unused imports while fixing lint errors on save
+    ]
 
 [dependency-groups]
-dev = [
-    "types-requests>=2.32.0.20241016",
-]
+  dev = ["types-requests>=2.32.0.20241016"]
