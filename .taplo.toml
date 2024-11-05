@@ -1,6 +1,7 @@
-# See: https://taplo.tamasfe.dev/configuration/formatter-options.html
+#:schema taplo://taplo.toml
 
 [formatting]
+  # https://taplo.tamasfe.dev/configuration/formatter-options.html
   allowed_blank_lines = 1
   indent_entries = true
   indent_tables = true
