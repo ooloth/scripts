@@ -1,6 +1,7 @@
 import os
 import subprocess
 from pathlib import Path
+from typing import Annotated
 
 import typer
 from rich.console import Console
@@ -16,7 +17,7 @@ from utils.logs import log
 
 # TODO: add modem typer app as well
 app = typer.Typer(no_args_is_help=True)
-# app.add_typer(subscribe.app, name="feed")
+app.add_typer(subscribe.app, name="feedbin")
 
 console = Console()
 
@@ -44,12 +45,11 @@ def _get_env() -> dict[str, str]:
     env["DRY_RUN"] = env.get("DRY_RUN", DRY_RUN_DEFAULT)
     env["PYTHONPATH"] = Path(__file__).parent.absolute().as_posix()  # this project's root directory
 
-    # log.debug("env:", env)
     return env
 
 
 @app.command()
-def pick() -> None:
+def select(dry_run: bool = False) -> None:
     """Run the selected script."""
     console.print(_get_scripts_table())
     script_number = typer.prompt("💬 Which script number would you like to run?", type=int)
@@ -61,12 +61,26 @@ def pick() -> None:
 
         match script:
             case "feedbin/subscribe":
-                url = typer.prompt("💬 What URL would you like to subscribe to?", type=str)
-                subscribe.add(url)
+                subscribe.app()
             case _:
                 subprocess.run(["uv", "run", f"{script}.py"], env=_get_env())
     else:
         log.info("Invalid option '{script_number}'")
+
+
+@app.command(hidden=True)
+def main(
+    subcommand: Annotated[str, typer.Argument()] = "select",
+    dry_run: Annotated[bool, typer.Option("--dry-run", "-d")] = False,
+) -> None:
+    match subcommand:
+        case "select":
+            select()
+        case "feedbin":
+            log.info("Running 'feed' subcommand.")
+            subscribe.app()
+        case _:
+            log.error("Invalid subcommand")
 
 
 if __name__ == "__main__":

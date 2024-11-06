@@ -51,6 +51,12 @@ class NotFoundError(FeedbinError):
     pass
 
 
+class ForbiddenError(FeedbinError):
+    """Raised when the caller does not own a resource."""
+
+    pass
+
+
 class UnexpectedError(FeedbinError):
     "Raised for unexpected errors."
 
@@ -58,8 +64,12 @@ class UnexpectedError(FeedbinError):
 
 
 def make_request(method: HTTPMethod, args: RequestArgs) -> requests.Response:
-    """Make an HTTP request and handle common tasks."""
-    response = requests.request(
+    """
+    Make an HTTP request and handle common tasks.
+
+    TODO: expect different request args based on the method?
+    """
+    return requests.request(
         method.value,
         args.url,
         json=args.json,
@@ -67,8 +77,6 @@ def make_request(method: HTTPMethod, args: RequestArgs) -> requests.Response:
         headers=args.headers,
         auth=_get_auth(),
     )
-    response.raise_for_status()
-    return response
 
 
 class Subscription(BaseModel):
@@ -145,85 +153,69 @@ def create_subscription(url: str) -> Subscription | list[FeedOption]:
         case _:
             raise UnexpectedError("Feedbin: unexpected error while creating subscription")
 
+
 def delete_subscription(subscription_id: int) -> None:
     """
     Delete a subscription.
 
-    DOCS: ...
+    DOCS: https://github.com/feedbin/feedbin-api/blob/master/content/subscriptions.md#delete-subscription
 
-    TODO: add params
     TODO: add possible responses
     """
     request_args = RequestArgs(url=f"{API}/subscriptions/{subscription_id}.json")
-    make_request(HTTPMethod.DELETE, request_args)
+
+    log.info(f"Feedbin: deleting subscription {subscription_id}")
+    response = make_request(HTTPMethod.DELETE, request_args)
+
+    match response.status_code:
+        case 204:
+            log.debug(f"Feedbin: subscription {subscription_id} deleted")
+        case 403:
+            raise ForbiddenError(f"Feedbin: you do not own subscription {subscription_id} so you cannot delete it")
+        case _:
+            raise UnexpectedError("Feedbin: unexpected error while deleting subscription")
 
 
-# TODO: move out of client file
-# def choose_between_multiple_feeds(feeds: list[FeedChoice]):
-#     """Prompt the user to choose between multiple feeds."""
-#     print("Multiple feeds found. Please choose one:")
-#     for idx, feed in enumerate(feeds, start=1):
-#         print(f"{idx}. {feed.title} ({feed.feed_url})")
-
-#     choice = int(input("Enter the number of the feed you want to subscribe to: "))
-#     if 1 <= choice <= len(feeds):
-#         selected_feed = feeds[choice - 1]
-#         print(f"Selected feed URL: {selected_feed.feed_url}")
-#     else:
-#         print("Invalid choice")
+class Entry(BaseModel):
+    title: str
+    author: str
+    url: str
+    feed_id: int
+    id: int
 
 
-#####################
-# Client as a class #
-#####################
+def get_feed_entries(
+    feed_id: int,
+    *,
+    read: bool | None = None,
+    starred: bool | None = None,
+) -> list[Entry]:
+    """
+    Get all entries for a feed.
 
-_client = None
+    Params:
+    - read: Filter by read status. Options: True, False, None.
+    - starred: Filter by starred status. Options: True, False, None.
 
+    DOCS: https://github.com/feedbin/feedbin-api/blob/master/content/entries.md#get-v2feeds203entriesjson
 
-def get_client() -> "FeedbinClient":
-    global _client
+    TODO: handle pagination in this helper so the caller doesn't have to think about it?
+    TODO: accept a site_url and look up the feed_id internally?
+    """
+    request_args = RequestArgs(
+        url=f"{API}/feeds/{feed_id}/entries.json",
+        params={"read": read, "starred": starred},
+    )
 
-    if _client is None:
-        _client = FeedbinClient(*_get_auth())
+    log.info(f"Feedbin: getting entries for feed {feed_id}")
+    response = make_request(HTTPMethod.GET, request_args)
 
-    return _client
-
-
-class FeedbinClient:
-    def __init__(self, username: str, password: str):
-        self.auth = (username, password)
-
-    def create_subscription(self, url: str) -> Subscription | None:
-        """Create a subscription and handle the response."""
-        response = requests.post(
-            f"{API}/subscriptions.json",
-            auth=self.auth,
-            headers={"Content-Type": "application/json; charset=utf-8"},
-            json={"feed_url": url},
-        )
-
-        if response.status_code == 201:
-            return Subscription(**response.json())
-        elif response.status_code == 302:
-            return Subscription(**response.json())
-        elif response.status_code == 404:
-            print(f"❌ No feed found at '{url}'")
-        elif response.status_code == 300:
-            self.choose_between_multiple_feeds(response.json())
-        else:
-            print(f"❌ Unexpected HTTP status code: {response.status_code}")
-            print(response.text)
-        return None
-
-    def choose_between_multiple_feeds(self, feeds: list[FeedOption]) -> None:
-        """Prompt the user to choose between multiple feeds."""
-        print("Multiple feeds found. Please choose one:")
-        for idx, feed in enumerate(feeds, start=1):
-            print(f"{idx}. {feed.title} ({feed.feed_url})")
-
-        choice = int(input("Enter the number of the feed you want to subscribe to: "))
-        if 1 <= choice <= len(feeds):
-            selected_feed = feeds[choice - 1]
-            print(f"Selected feed URL: {selected_feed.feed_url}")
-        else:
-            print("Invalid choice")
+    match response.status_code:
+        case 200:
+            return [Entry(**entry) for entry in response.json()]
+        case 403:
+            raise ForbiddenError("Feedbin: you are not subscribed to feed {feed_id}")
+        case 404:
+            raise NotFoundError("Feedbin: no subscriptions found")
+        case _:
+            raise UnexpectedError("Feedbin: unexpected error while getting subscriptions")
