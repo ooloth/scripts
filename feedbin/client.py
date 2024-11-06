@@ -10,19 +10,11 @@ from utils.logs import log
 
 API = "https://api.feedbin.com/v2"
 
-_auth = None
 
-
-def _get_auth() -> tuple[str, str]:
-    "Retrieve the username and password for the Feedbin API from 1Password."
-    global _auth
-
-    if _auth is None:
-        username = get_secret("Feedbin", "username")
-        password = get_secret("Feedbin", "password")
-        _auth = (username, password)
-
-    return _auth
+class HTTPMethod(Enum):
+    GET = "GET"
+    POST = "POST"
+    DELETE = "DELETE"
 
 
 @dataclass
@@ -31,12 +23,6 @@ class RequestArgs:
     params: dict[str, Any] | None = None
     json: dict[str, Any] | None = None
     headers: dict[str, str] | None = None
-
-
-class HTTPMethod(Enum):
-    GET = "GET"
-    POST = "POST"
-    DELETE = "DELETE"
 
 
 class FeedbinError(Exception):
@@ -61,6 +47,21 @@ class UnexpectedError(FeedbinError):
     "Raised for unexpected errors."
 
     pass
+
+
+_auth = None
+
+
+def _get_auth() -> tuple[str, str]:
+    "Retrieve the username and password for the Feedbin API from 1Password."
+    global _auth
+
+    if _auth is None:
+        username = get_secret("Feedbin", "username")
+        password = get_secret("Feedbin", "password")
+        _auth = (username, password)
+
+    return _auth
 
 
 def make_request(method: HTTPMethod, args: RequestArgs) -> requests.Response:
@@ -115,12 +116,12 @@ class FeedOption(BaseModel):
 class MultipleChoicesError(FeedbinError):
     """Raised when multiple choices are returned."""
 
-    def __init__(self, choices):
+    def __init__(self, choices: list[FeedOption]) -> None:
         self.choices = choices
         super().__init__("Feedbin: multiple options returned")
 
 
-def create_subscription(url: str) -> Subscription | list[FeedOption]:
+def create_subscription(url: str) -> Subscription:
     """
     Create a subscription from a website or feed URL (with or without the scheme).
 
