@@ -104,26 +104,46 @@ class FeedOption(BaseModel):
     title: str
 
 
-def create_subscription(url: str) -> Subscription | None:
+class MultipleChoicesError(FeedbinError):
+    """Raised when multiple choices are returned."""
+
+    def __init__(self, choices):
+        self.choices = choices
+        super().__init__("Feedbin: multiple options returned")
+
+
+def create_subscription(url: str) -> Subscription | list[FeedOption]:
     """
-    Create a subscription.
+    Create a subscription from a website or feed URL (with or without the scheme).
 
     DOCS: https://github.com/feedbin/feedbin-api/blob/master/content/subscriptions.md
 
-    TODO: add params
-    TODO: add possible responses
+    TODO: automatically call update_subscription to add emoji suffix to title?
     """
     request_args = RequestArgs(
         url=f"{API}/subscriptions.json",
         json={"feed_url": url},
         headers={"Content-Type": "application/json; charset=utf-8"},
     )
-    response = make_request(HTTPMethod.POST, request_args)
-    # match response.status_code:
-    #     case 200:
-    #         log(f"✅ Now subscribed to '{url}'")
-    return Subscription(**response.json())
 
+    log.info(f"Feedbin: creating subscription for '{url}'")
+    response = make_request(HTTPMethod.POST, request_args)
+
+    match response.status_code:
+        case 200 | 302:
+            log.debug("Feedbin: existing subscription found")
+            return Subscription(**response.json())
+        case 201:
+            log.debug("Feedbin: subscription created")
+            return Subscription(**response.json())
+        case 300:
+            log.debug("Feedbin: multiple feed options found")
+            options = [FeedOption(**feed) for feed in response.json()]
+            raise MultipleChoicesError(options)
+        case 404:
+            raise NotFoundError(f"Feedbin: no feed found at {url}")
+        case _:
+            raise UnexpectedError("Feedbin: unexpected error while creating subscription")
 
 def delete_subscription(subscription_id: int) -> None:
     """
