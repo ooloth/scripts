@@ -7,6 +7,7 @@ from rich.console import Console
 from rich.table import Table
 
 from feedbin import subscribe
+from utils.logs import log
 
 # from feedbin.subscribe import subscribe
 
@@ -43,7 +44,7 @@ def _get_env() -> dict[str, str]:
     env["DRY_RUN"] = env.get("DRY_RUN", DRY_RUN_DEFAULT)
     env["PYTHONPATH"] = Path(__file__).parent.absolute().as_posix()  # this project's root directory
 
-    # log("env:", env)
+    # log.debug("env:", env)
     return env
 
 
@@ -56,7 +57,7 @@ def pick() -> None:
     if 1 <= script_number <= len(SCRIPTS):
         script = SCRIPTS[script_number - 1]
 
-        typer.echo(f"🚀 Running '{script}'.")
+        log.info(f"Running '{script}'.")
 
         match script:
             case "feedbin/subscribe":
@@ -65,7 +66,7 @@ def pick() -> None:
             case _:
                 subprocess.run(["uv", "run", f"{script}.py"], env=_get_env())
     else:
-        typer.echo("🚨 Invalid option '{script_number}'")
+        log.info("Invalid option '{script_number}'")
 
 
 if __name__ == "__main__":
