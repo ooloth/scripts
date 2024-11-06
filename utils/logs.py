@@ -1,4 +1,5 @@
 import logging
+from functools import partial
 
 from rich.logging import RichHandler
 
@@ -9,11 +10,15 @@ from rich.logging import RichHandler
 # See: https://mathspp.com/blog/til/042
 
 logging.basicConfig(
-    level="NOTSET",
+    level=logging.INFO,
     format="%(message)s",
     datefmt="[%X]",
     handlers=[RichHandler()],
 )
+
+# Always output exceptions when logging an error
+logging.error = partial(logging.error, exc_info=True, stack_info=True)
+logging.critical = partial(logging.critical, exc_info=True, stack_info=True)
 
 # Create a module-level logger
 log = logging.getLogger(__name__)

@@ -23,7 +23,7 @@ def build_secret_reference(item: str, field: str) -> str:
 
 def get_secret(item: str, field: str) -> str:
     """
-    Generates a 1Password secret reference and retrieves the secret value.
+    Generate a 1Password secret reference and retrieve the secret's value.
     """
     secret_reference = build_secret_reference(item, field)
 

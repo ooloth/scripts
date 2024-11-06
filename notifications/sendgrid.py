@@ -44,5 +44,5 @@ def send_email(subject: str, html: str) -> None:
 
         client.send(message)
         log.info("✅ Email sent successfully.")
-    except Exception as e:
-        log.error(f"🚨 There was a problem sending the '{subject}' email:", e)
+    except Exception:
+        log.error(f"🚨 There was a problem sending the '{subject}' email")

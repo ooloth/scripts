@@ -47,7 +47,7 @@ def subscribe(url: str) -> None:
         log.warning(e)
         raise typer.Abort()
     except UnexpectedError as e:
-        log.error(e, exc_info=True)
+        log.error(e)
         raise typer.Abort()
 
 
@@ -72,10 +72,10 @@ def add(url: str, dry_run: Annotated[bool, typer.Option("--dry-run", "-d")] = Fa
     #     subscriptions = get_subscriptions()
     #     log.info(f"{len(subscriptions)} Feedbin subscriptions found")
     # except NotFoundError as e:
-    #     log.error(e, exc_info=True)
+    #     log.error(e)
     #     subscriptions = []
     # except UnexpectedError as e:
-    #     log.error(e, exc_info=True)
+    #     log.error(e)
     #     subscriptions = []
 
     # log.debug(f"subscriptions = {subscriptions}")
