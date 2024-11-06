@@ -6,7 +6,7 @@
   name = "scripts"
   description = "Quick solutions to small problems"
   requires-python = ">=3.13"
-  dynamic = ["version"]
+  version = "0.1.0"
   dependencies = [
     "mypy>=1.13.0",
     "playwright>=1.48.0",
