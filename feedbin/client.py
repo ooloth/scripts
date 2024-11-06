@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from datetime import datetime
 from enum import Enum
 from typing import Any
 
@@ -32,7 +31,6 @@ class RequestArgs:
     params: dict[str, Any] | None = None
     json: dict[str, Any] | None = None
     headers: dict[str, str] | None = None
-    # auth: tuple[str, str] | None = None
 
 
 class HTTPMethod(Enum):
@@ -81,26 +79,15 @@ class Subscription(BaseModel):
     id: int
 
 
-def get_subscriptions(*, extended: bool = False, since: datetime | None = None) -> list[Subscription]:
+def get_subscriptions() -> list[Subscription]:
     """
     Get all subscriptions.
 
-    Params:
-    - extended: Include additional information about the subscription.
-    - since: Only return subscriptions that have been updated since this date.
-
     DOCS: https://github.com/feedbin/feedbin-api/blob/master/content/subscriptions.md#get-subscriptions
     """
-    params = {"extended": extended, "since": ""}
-    if since:
-        params["since"] = since.isoformat()  # convert to ISO 8601 format
+    request_args = RequestArgs(url=f"{API}/subscriptions.json")
 
-    request_args = RequestArgs(
-        url=f"{API}/subscriptions.json",
-        params={"extended": extended, "since": since},
-    )
-
-    log.info(f"Feedbin: getting subscriptions with params: {params}")
+    log.info("Feedbin: getting all subscriptions")
     response = make_request(HTTPMethod.GET, request_args)
 
     match response.status_code:
