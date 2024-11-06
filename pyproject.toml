@@ -21,6 +21,9 @@
 [tool.ruff]
   line-length = 120
 
+  [tool.ruff.format]
+    docstring-code-format = true
+
   [tool.ruff.lint]
     extend-select = [
       "I", # enable isort rules in the CLI (see: https://github.com/astral-sh/ruff-vscode?tab=readme-ov-file#configuring-vs-code)
