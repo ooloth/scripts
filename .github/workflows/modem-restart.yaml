@@ -31,7 +31,7 @@ jobs:
         run: uv sync --all-extras --dev
 
       # See: https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/workflow-commands-for-github-actions#setting-an-environment-variable
-      - name: set PYTHONPATH
+      - name: Set PYTHONPATH
         run: echo "PYTHONPATH=$(pwd)" >> $GITHUB_ENV
 
       # TODO: narrow to the relevant tests for this action
@@ -45,7 +45,7 @@ jobs:
       # See: https://github.com/marketplace/actions/connect-tailscale
       # See: https://tailscale.com/kb/1215/oauth-clients
       # See: https://www.youtube.com/watch?v=WXCokV-FeFw
-      - name: Tailscale
+      - name: Connect to Tailscale network
         uses: tailscale/github-action@v2
         with:
           oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}

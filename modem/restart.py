@@ -29,7 +29,7 @@ def _log_in_and_restart(url: str, password: str) -> None:
         page.click("a[href='advancedtools/resets']")
 
         if dry_run == "true":
-            log("🌵 Dry run: skipped restarting modem.")
+            log.info("🌵 Dry run: skipped restarting modem.")
             return
 
         # Restart modem and confirm twice
@@ -40,7 +40,7 @@ def _log_in_and_restart(url: str, password: str) -> None:
         page.wait_for_selector("button[id=yes]")
         page.click("button[id=yes]")
 
-        log("✅ Modem is restarting.")
+        log.info("✅ Modem is restarting.")
 
         browser.close()
 
@@ -54,7 +54,7 @@ def main() -> None:
         _log_in_and_restart(modem_url, modem_password)
         send_email("✅ Modem restarted", f"<p>Modem restarted {restart_time}.</p>")
     except Exception as e:
-        log("🚨 Modem restart failed:", e)
+        log.error("🚨 Modem restart failed:", e)
         send_email(
             "🚨 Modem restart failed",
             f"<p>Modem restart failed {restart_time}.</p><hr /><p><strong>Error:</strong></p><pre>{e}</pre>",

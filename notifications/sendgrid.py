@@ -39,10 +39,10 @@ def send_email(subject: str, html: str) -> None:
         client = get_client()
 
         if dry_run == "true":
-            log("🌵 Dry run: skipped emailing message:", message.get())
+            log.info("🌵 Dry run: skipped emailing message:", message.get())
             return
 
         client.send(message)
-        log("✅ Email sent successfully.")
+        log.info("✅ Email sent successfully.")
     except Exception as e:
-        log(f"🚨 There was a problem sending the '{subject}' email:", e)
+        log.error(f"🚨 There was a problem sending the '{subject}' email:", e)

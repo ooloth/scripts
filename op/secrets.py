@@ -26,7 +26,6 @@ def get_secret(item: str, field: str) -> str:
     Generates a 1Password secret reference and retrieves the secret value.
     """
     secret_reference = build_secret_reference(item, field)
-    # log("secret_reference:", secret_reference)
 
     result = subprocess.run(
         ["op", "read", secret_reference],
