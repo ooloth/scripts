@@ -10,13 +10,13 @@ from rich.logging import RichHandler
 # See: https://mathspp.com/blog/til/042
 
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,
     format="%(message)s",
     datefmt="[%X]",
     handlers=[RichHandler()],
 )
 
-# Always output exceptions when logging an error
+# Always output exceptions and stack traces when logging an error
 logging.error = partial(logging.error, exc_info=True, stack_info=True)
 logging.critical = partial(logging.critical, exc_info=True, stack_info=True)
 
