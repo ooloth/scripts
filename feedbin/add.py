@@ -3,12 +3,11 @@ from typing import Annotated
 import rich
 import typer
 
-from feedbin.api import (
+from feedbin.api import NotFoundError, UnexpectedError
+from feedbin.api.subscriptions import (
     FeedOption,
     MultipleChoicesError,
-    NotFoundError,
     Subscription,
-    UnexpectedError,
     create_subscription,
     get_subscriptions,
 )
@@ -17,7 +16,7 @@ from utils.logs import log
 # Docs:
 # - https://typer.tiangolo.com/tutorial/subcommands/add-typer
 
-app = typer.Typer()
+app = typer.Typer(no_args_is_help=True)
 
 
 # def _find_matching_subscription(url: str, subscriptions: list[Subscription]):
@@ -58,13 +57,12 @@ def ask_for_feed_choice(feeds: list[FeedOption]) -> FeedOption:
         raise typer.Abort()
 
 
-def subscribe(url: str) -> Subscription:
-    log.info(f"Subscribing to '{url}'")
+def subscribe_to_feed_at_ul(url: str) -> Subscription:
     try:
         return create_subscription(url)
     except MultipleChoicesError as e:
         chosen_feed = ask_for_feed_choice(e.choices)
-        return subscribe(chosen_feed.feed_url)
+        return subscribe_to_feed_at_ul(chosen_feed.feed_url)
     except NotFoundError as e:
         log.warning(e)
         raise typer.Abort()
@@ -82,11 +80,12 @@ def add(url: str, dry_run: Annotated[bool, typer.Option("--dry-run", "-d")] = Fa
 
     typer.confirm(f"🔖 Subscribe to '{url}'?", abort=True)
 
-    # Subscribe
-    new_subscription = subscribe(url)
+    # Subscribe to feed at URL
+    log.info(f"Subscribing to '{url}'")
+    new_subscription = subscribe_to_feed_at_ul(url)
     log.debug(f"🔬 new_subscription = {new_subscription}")
 
-    # Mark backlog  unread
+    # Maybe mark backlog unread
     mark_unread = typer.confirm("🔖 Mark backlog unread?", default=False)
     if not mark_unread:
         rich.print("👋 You're all set!")
