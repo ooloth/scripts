@@ -1,5 +1,6 @@
 from typing import Annotated
 
+import rich
 import typer
 
 from feedbin.client import (
@@ -72,25 +73,23 @@ def subscribe(url: str) -> Subscription:
         raise typer.Abort()
 
 
-def ask_for_url() -> str:
-    """Prompt the user for a URL to subscribe to."""
-    return typer.prompt("💬 What URL would you like to subscribe to?", type=str)
-
-
 # See: https://github.com/feedbin/feedbin-api/blob/master/content/subscriptions.md#create-subscription
 @app.command()
 def add(url: str, dry_run: Annotated[bool, typer.Option("--dry-run", "-d")] = False) -> None:
+    # Get the URL
     if not url:
-        url = ask_for_url()
+        url = typer.prompt("💬 What URL would you like to subscribe to?", type=str)
 
     typer.confirm(f"🔖 Subscribe to '{url}'?", abort=True)
 
+    # Subscribe
     new_subscription = subscribe(url)
     log.debug(f"🔬 new_subscription = {new_subscription}")
 
-    mark_unread = typer.confirm("🔖 Mark backlog as unread?", default=False)
+    # Mark backlog  unread
+    mark_unread = typer.confirm("🔖 Mark backlog unread?", default=False)
     if not mark_unread:
-        log.info("🔖 Skipping marking backlog as unread")
+        rich.print("👋 You're all set!")
         typer.Exit()
 
     log.info("🔖 Marking backlog as unread")

@@ -92,7 +92,8 @@ def get_subscriptions() -> list[Subscription]:
     """
     Get all subscriptions.
 
-    DOCS: https://github.com/feedbin/feedbin-api/blob/master/content/subscriptions.md#get-subscriptions
+    Docs:
+     - https://github.com/feedbin/feedbin-api/blob/master/content/subscriptions.md#get-subscriptions
     """
     request_args = RequestArgs(url=f"{API}/subscriptions.json")
 
@@ -125,7 +126,8 @@ def create_subscription(url: str) -> Subscription:
     """
     Create a subscription from a website or feed URL (with or without the scheme).
 
-    DOCS: https://github.com/feedbin/feedbin-api/blob/master/content/subscriptions.md
+    Docs:
+     - https://github.com/feedbin/feedbin-api/blob/master/content/subscriptions.md
 
     TODO: automatically call update_subscription to add emoji suffix to title?
     """
@@ -159,7 +161,8 @@ def delete_subscription(subscription_id: int) -> None:
     """
     Delete a subscription.
 
-    DOCS: https://github.com/feedbin/feedbin-api/blob/master/content/subscriptions.md#delete-subscription
+    Docs:
+     - https://github.com/feedbin/feedbin-api/blob/master/content/subscriptions.md#delete-subscription
 
     TODO: add possible responses
     """
@@ -195,10 +198,11 @@ def get_feed_entries(
     Get all entries for a feed.
 
     Params:
-    - read: Filter by read status. Options: True, False, None.
-    - starred: Filter by starred status. Options: True, False, None.
+     - read: Filter by read status. Options: True, False, None.
+     - starred: Filter by starred status. Options: True, False, None.
 
-    DOCS: https://github.com/feedbin/feedbin-api/blob/master/content/entries.md#get-v2feeds203entriesjson
+    Docs:
+     - https://github.com/feedbin/feedbin-api/blob/master/content/entries.md#get-v2feeds203entriesjson
 
     TODO: handle pagination in this helper so the caller doesn't have to think about it?
     TODO: accept a site_url and look up the feed_id internally?
