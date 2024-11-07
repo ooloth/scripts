@@ -3,7 +3,7 @@ from typing import Annotated
 import rich
 import typer
 
-from feedbin.client import (
+from feedbin.api import (
     FeedOption,
     MultipleChoicesError,
     NotFoundError,
