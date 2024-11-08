@@ -1,38 +1,42 @@
 import os
-from datetime import datetime
 
+import typer
 from playwright.sync_api import sync_playwright
 
 from notifications.sendgrid import send_email
 from op.secrets import get_secret
+from utils.cli import DryRun
 from utils.logs import log
 
+app = typer.Typer(no_args_is_help=True)
 
-def _log_in_and_restart(url: str, password: str) -> None:
-    dry_run = os.getenv("DRY_RUN", False)
 
+def _log_in_and_restart(url: str, password: str, *, dry_run: bool) -> None:
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
 
-        # Log in
+        log.info("🔐 Logging into modem settings")
+
         page.goto(url)
         page.click("button[id=headerLogin]")
         page.wait_for_selector("input[name=admin-password]")
         page.fill("input[name=admin-password]", password)
         page.click("button[id=loginButton]")
 
-        # Navigate to reset options
+        log.info("🗺️  Navigating to reset options")
+
         page.wait_for_selector("a[href=advancedtools]")
         page.click("a[href=advancedtools]")
         page.wait_for_selector("a[href='advancedtools/resets']")
         page.click("a[href='advancedtools/resets']")
 
-        if dry_run == "true":
-            log.info("🌵 Dry run: skipped restarting modem.")
+        if dry_run:
+            log.info("🌵 Skipping modem restart (dry run)")
             return
 
-        # Restart modem and confirm twice
+        log.info("🔄 Restarting modem")
+
         page.wait_for_selector("button[id=restart]")
         page.click("button[id=restart]")
         page.wait_for_selector("button[id=yes]")
@@ -45,21 +49,32 @@ def _log_in_and_restart(url: str, password: str) -> None:
         browser.close()
 
 
-def main() -> None:
+@app.command("restart")
+def restart(dry_run: DryRun = False) -> None:
     modem_url = get_secret("Modem", "website")
     modem_password = get_secret("Modem", "password")
-    restart_time = datetime.now().strftime("%A at %I:%M %p")
+    dry_run = os.getenv("DRY_RUN") == "true" or dry_run
 
     try:
-        _log_in_and_restart(modem_url, modem_password)
-        send_email("✅ Modem restarted", f"<p>Modem restarted {restart_time}.</p>")
+        _log_in_and_restart(
+            modem_url,
+            modem_password,
+            dry_run=dry_run,
+        )
+        send_email(
+            "✅ Modem restarted",
+            "<p>Modem restarted. 📡 ↪️</p>",
+            dry_run=dry_run,
+        )
     except Exception as e:
         log.error("🚨 Modem restart failed")
         send_email(
             "🚨 Modem restart failed",
-            f"<p>Modem restart failed {restart_time}.</p><hr /><p><strong>Error:</strong></p><pre>{e}</pre>",
+            f"<p>Modem restart failed.</p><p><strong>Error:</strong></p><hr /><pre>{e}</pre>",
+            dry_run=dry_run,
         )
 
 
 if __name__ == "__main__":
-    main()
+    # This is the GitHub Actions entrypoint
+    restart()

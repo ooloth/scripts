@@ -7,6 +7,7 @@ from op.secrets import get_secret
 from utils.logs import log
 
 OP_ITEM = "SendGrid"
+OP_FIELD = "api key"
 
 _client = None
 
@@ -16,17 +17,17 @@ def get_client() -> SendGridAPIClient:
     global _client
 
     if _client is None:
-        _client = SendGridAPIClient(api_key=get_secret(OP_ITEM, "api key"))
+        _client = SendGridAPIClient(api_key=get_secret(OP_ITEM, OP_FIELD))
 
     return _client
 
 
-def send_email(subject: str, html: str) -> None:
+def send_email(subject: str, html: str, *, dry_run: bool = False) -> None:
     """
     Send an email with a standard heading and the given subject and HTML content.
     See: https://github.com/sendgrid/sendgrid-python/blob/main/use_cases/send_a_single_email_to_a_single_recipient.md
     """
-    dry_run = os.getenv("DRY_RUN", False)
+    dry_run = os.getenv("DRY_RUN") == "true" or dry_run
 
     message = Mail(
         from_email=get_secret(OP_ITEM, "from email"),
@@ -38,8 +39,8 @@ def send_email(subject: str, html: str) -> None:
     try:
         client = get_client()
 
-        if dry_run == "true":
-            log.info("🌵 Dry run: skipped emailing message:", message.get())
+        if dry_run:
+            log.info(f"🌵 Skipping '{subject}' email (dry run)")
             return
 
         client.send(message)
