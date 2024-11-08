@@ -1,20 +1,13 @@
+import os
 from typing import Annotated
 
 import rich
 import typer
 
 from feedbin.api import NotFoundError, UnexpectedError
-from feedbin.api.subscriptions import (
-    FeedOption,
-    MultipleChoicesError,
-    Subscription,
-    create_subscription,
-    get_subscriptions,
-)
+from feedbin.api.subscriptions import FeedOption, MultipleChoicesError, Subscription, create_subscription
+from utils.cli import DryRun
 from utils.logs import log
-
-# Docs:
-# - https://typer.tiangolo.com/tutorial/subcommands/add-typer
 
 app = typer.Typer(no_args_is_help=True)
 
@@ -27,21 +20,7 @@ app = typer.Typer(no_args_is_help=True)
 #     return None
 
 
-@app.command(name="list")
-def list_subscriptions() -> list[Subscription]:
-    try:
-        subscriptions = get_subscriptions()
-        log.info(f"{len(subscriptions)} Feedbin subscriptions found")
-        return subscriptions
-    except NotFoundError as e:
-        log.error(e)
-        return []
-    except UnexpectedError as e:
-        log.error(e)
-        return []
-
-
-def ask_for_feed_choice(feeds: list[FeedOption]) -> FeedOption:
+def _ask_for_feed_choice(feeds: list[FeedOption]) -> FeedOption:
     """Prompt the user to choose between multiple feeds."""
     print("Multiple feeds found. Please choose one:")
     for idx, feed in enumerate(feeds, start=1):
@@ -57,12 +36,14 @@ def ask_for_feed_choice(feeds: list[FeedOption]) -> FeedOption:
         raise typer.Abort()
 
 
-def subscribe_to_feed_at_ul(url: str) -> Subscription:
+def subscribe_to_feed(url: str) -> Subscription:
+    log.info(f"🔖 Subscribing to feed at '{url}'")
+
     try:
         return create_subscription(url)
     except MultipleChoicesError as e:
-        chosen_feed = ask_for_feed_choice(e.choices)
-        return subscribe_to_feed_at_ul(chosen_feed.feed_url)
+        chosen_feed = _ask_for_feed_choice(e.choices)
+        return subscribe_to_feed(chosen_feed.feed_url)
     except NotFoundError as e:
         log.warning(e)
         raise typer.Abort()
@@ -71,22 +52,23 @@ def subscribe_to_feed_at_ul(url: str) -> Subscription:
         raise typer.Abort()
 
 
-# See: https://github.com/feedbin/feedbin-api/blob/master/content/subscriptions.md#create-subscription
-@app.command()
-def add(url: str, dry_run: Annotated[bool, typer.Option("--dry-run", "-d")] = False) -> None:
-    # Get the URL
-    if not url:
-        url = typer.prompt("💬 What URL would you like to subscribe to?", type=str)
+Unread = Annotated[bool, typer.Option("--unread", "-u", help="Mark backlog unread")]
+
+
+def main(url: str, mark_backlog_unread: Unread = False, dry_run: DryRun = False) -> None:
+    dry_run = os.getenv("DRY_RUN") == "true" or dry_run
 
     typer.confirm(f"🔖 Subscribe to '{url}'?", abort=True)
 
-    # Subscribe to feed at URL
-    log.info(f"Subscribing to '{url}'")
-    new_subscription = subscribe_to_feed_at_ul(url)
-    log.debug(f"🔬 new_subscription = {new_subscription}")
+    if dry_run:
+        log.warning("🌵 Skipping subscription (dry run)")
+        typer.Exit()
 
-    # Maybe mark backlog unread
-    mark_unread = typer.confirm("🔖 Mark backlog unread?", default=False)
+    new_subscription = subscribe_to_feed(url)
+    log.debug(f"🔍 new_subscription: {new_subscription}")
+
+    mark_unread = typer.confirm("🔖 Mark backlog unread?", default=mark_backlog_unread)
+
     if not mark_unread:
         rich.print("👋 You're all set!")
         typer.Exit()
@@ -98,7 +80,3 @@ def add(url: str, dry_run: Annotated[bool, typer.Option("--dry-run", "-d")] = Fa
     # log.debug(f"subscriptions = {subscriptions}")
 
     return
-
-
-if __name__ == "__main__":
-    app()

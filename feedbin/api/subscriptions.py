@@ -32,7 +32,7 @@ def get_subscriptions() -> list[Subscription]:
     """Get all of my subscriptions."""
     request_args = RequestArgs(url=f"{API}/subscriptions.json")
 
-    log.info("Feedbin: getting all subscriptions")
+    log.info("Getting all Feedbin subscriptions")
     response = make_request(HTTPMethod.GET, request_args)
 
     match response.status_code:
@@ -70,24 +70,24 @@ def create_subscription(url: str) -> Subscription:
         headers={"Content-Type": "application/json; charset=utf-8"},
     )
 
-    log.info(f"Feedbin: creating subscription for '{url}'")
+    log.info(f"Creating Feedbin subscription for '{url}'")
     response = make_request(HTTPMethod.POST, request_args)
 
     match response.status_code:
         case 200 | 302:
-            log.debug("Feedbin: existing subscription found")
+            log.debug("Existing subscription found")
             return Subscription(**response.json())
         case 201:
-            log.debug("Feedbin: subscription created")
+            log.debug("Subscription created")
             return Subscription(**response.json())
         case 300:
-            log.debug("Feedbin: multiple feed options found")
+            log.debug("Multiple feed options found")
             options = [FeedOption(**feed) for feed in response.json()]
             raise MultipleChoicesError(options)
         case 404:
-            raise NotFoundError(f"Feedbin: no feed found at {url}")
+            raise NotFoundError(f"No feed found at {url}")
         case _:
-            raise UnexpectedError("Feedbin: unexpected error while creating subscription")
+            raise UnexpectedError("Unexpected error while creating subscription")
 
 
 def delete_subscription(subscription_id: int) -> None:
@@ -101,13 +101,13 @@ def delete_subscription(subscription_id: int) -> None:
     """
     request_args = RequestArgs(url=f"{API}/subscriptions/{subscription_id}.json")
 
-    log.info(f"Feedbin: deleting subscription {subscription_id}")
+    log.info(f"Deleting subscription {subscription_id}")
     response = make_request(HTTPMethod.DELETE, request_args)
 
     match response.status_code:
         case 204:
-            log.debug(f"Feedbin: subscription {subscription_id} deleted")
+            log.debug(f"Subscription {subscription_id} deleted")
         case 403:
-            raise ForbiddenError(f"Feedbin: you do not own subscription {subscription_id} so you cannot delete it")
+            raise ForbiddenError(f"You are not subscribed to subscription {subscription_id} so you cannot delete it")
         case _:
-            raise UnexpectedError("Feedbin: unexpected error while deleting subscription")
+            raise UnexpectedError("Unexpected error while deleting subscription")

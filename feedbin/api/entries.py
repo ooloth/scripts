@@ -32,9 +32,6 @@ def get_feed_entries(
      - read: Filter by read status. Options: True, False, None.
      - starred: Filter by starred status. Options: True, False, None.
 
-    Docs:
-     - https://github.com/feedbin/feedbin-api/blob/master/content/entries.md#get-v2feeds203entriesjson
-
     TODO: handle pagination in this helper so the caller doesn't have to think about it?
     TODO: accept a site_url and look up the feed_id internally?
     """
