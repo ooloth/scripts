@@ -4,4 +4,4 @@
 
 These scripts are highly experimental and intended for my personal learning and enjoyment. 🤓🕺
 
-Feel free to copy anything you find useful, but expect everything you see her to change!
+Everything you see could change at any time, but feel free to copy anything you find useful!
