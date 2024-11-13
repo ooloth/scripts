@@ -18,14 +18,7 @@ from feedbin.adapters.api import (
     UnexpectedError,
     make_request,
 )
-
-
-class Subscription(BaseModel):
-    title: str
-    site_url: str
-    feed_url: str
-    feed_id: int
-    id: int
+from feedbin.domain.entities import Subscription
 
 
 def get_subscriptions() -> list[Subscription]:

@@ -5,7 +5,6 @@ Docs:
  - https://github.com/feedbin/feedbin-api/blob/master/content/entries.md#get-v2feeds203entriesjson
 """
 
-from pydantic import BaseModel
 from requests import HTTPError
 
 from common.logs import log
@@ -17,14 +16,7 @@ from feedbin.adapters.api import (
     UnexpectedError,
     make_paginated_request,
 )
-
-
-class Entry(BaseModel):
-    title: str
-    author: str
-    url: str
-    feed_id: int
-    id: int
+from feedbin.domain.entities import Entry
 
 
 def get_feed_entries(
