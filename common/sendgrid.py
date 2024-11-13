@@ -3,8 +3,8 @@ import os
 from sendgrid.helpers.mail import Mail  # type: ignore
 from sendgrid.sendgrid import SendGridAPIClient  # type: ignore
 
-from op.secrets import get_secret
-from utils.logs import log
+from common.logs import log
+from common.secrets import get_secret
 
 OP_ITEM = "SendGrid"
 OP_FIELD = "api key"

@@ -1,13 +1,17 @@
+# TODO: move all "typer" usage to feedbin.adapters.cli
+
 import os
 from typing import Annotated
 
 import rich
 import typer
 
-from feedbin.api import NotFoundError, UnexpectedError
-from feedbin.api.subscriptions import FeedOption, MultipleChoicesError, Subscription, create_subscription
-from utils.cli import DryRun
-from utils.logs import log
+from common.cli import DryRun
+from common.logs import log
+from feedbin.adapters.api import NotFoundError, UnexpectedError
+from feedbin.adapters.api.entries import get_feed_entries
+from feedbin.adapters.api.subscriptions import FeedOption, MultipleChoicesError, Subscription, create_subscription
+from feedbin.application.mark_entries_unread import mark_entries_unread
 
 app = typer.Typer(no_args_is_help=True)
 
@@ -55,7 +59,7 @@ def subscribe_to_feed(url: str) -> Subscription:
 Unread = Annotated[bool, typer.Option("--unread", "-u", help="Mark backlog unread")]
 
 
-def main(url: str, mark_backlog_unread: Unread = False, dry_run: DryRun = False) -> None:
+def add_subscription(url: str, mark_backlog_unread: Unread = False, dry_run: DryRun = False) -> None:
     dry_run = os.getenv("DRY_RUN") == "true" or dry_run
 
     typer.confirm(f"🔖 Subscribe to '{url}'?", abort=True)
@@ -67,13 +71,21 @@ def main(url: str, mark_backlog_unread: Unread = False, dry_run: DryRun = False)
     new_subscription = subscribe_to_feed(url)
     log.debug(f"🔍 new_subscription: {new_subscription}")
 
-    mark_unread = typer.confirm("🔖 Mark backlog unread?", default=mark_backlog_unread)
+    mark_backlog_unread = typer.confirm("🔖 Mark backlog unread?", default=mark_backlog_unread)
 
-    if not mark_unread:
+    if not mark_backlog_unread:
         rich.print("👋 You're all set!")
         typer.Exit()
 
-    log.info("🔖 Marking backlog as unread")
+    log.info("🔖 Getting all entries")
+    entries = get_feed_entries(new_subscription.feed_id)
+    log.debug(f"🔍 entries: {entries}")
+
+    entry_ids = [entry.id for entry in entries]
+    log.debug(f"🔍 entry_ids: {entry_ids}")
+
+    log.info("🔖 Marking all entries as unread")
+    mark_entries_unread(entry_ids)
     # TODO: get all entry ids for this subscription via get_feed_entries
     # TODO: mark all entries as unread via https://github.com/feedbin/feedbin-api/blob/master/content/unread-entries.md#create-unread-entries-mark-as-unread
 

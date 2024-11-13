@@ -1,5 +1,6 @@
 """
 Core functionality for interacting with all Feedbin API endpoints.
+
 """
 
 from dataclasses import dataclass
@@ -8,7 +9,7 @@ from typing import Any
 
 import requests
 
-from op.secrets import get_secret
+from common.secrets import get_secret
 
 API = "https://api.feedbin.com/v2"
 
@@ -46,10 +47,13 @@ def make_request(method: HTTPMethod, args: RequestArgs) -> requests.Response:
     """
     Make an HTTP request to the Feedbin API.
 
+    Since the possible status codes (and their explanations) vary by endpoint, we raise them at this base level
+    and catch them one level up in the endpoint-specific API helper functions.
+
     TODO:
-     - expect different request args based on the method?
+     - Expect different request args for GET vs POST methods?
     """
-    return requests.request(
+    response = requests.request(
         method.value,
         args.url,
         json=args.json,
@@ -57,6 +61,45 @@ def make_request(method: HTTPMethod, args: RequestArgs) -> requests.Response:
         headers=args.headers,
         auth=_get_auth(),
     )
+    response.raise_for_status()
+    return response
+
+
+def parse_link_header(link_header: str) -> dict[str, str]:
+    """
+    Parse the Link header to extract URLs for pagination.
+
+    Docs:
+     - https://github.com/feedbin/feedbin-api?tab=readme-ov-file#pagination
+    """
+    links = {}
+    for link in link_header.split(","):
+        parts = link.split(";")
+        url = parts[0].strip()[1:-1]
+        rel = parts[1].strip().split("=")[1].strip('"')
+        links[rel] = url
+    return links
+
+
+def make_paginated_request(request_args: RequestArgs) -> list[dict[str, Any]]:
+    """
+    Fetch all pages of results for a paginated request.
+
+    Docs:
+     - https://github.com/feedbin/feedbin-api?tab=readme-ov-file#pagination
+    """
+    all_results = []
+    while request_args.url:
+        response = make_request(HTTPMethod.GET, request_args)
+        all_results.extend(response.json())
+        link_header = response.headers.get("Link")
+        if link_header:
+            links = parse_link_header(link_header)
+            request_args.url = links.get("next", "")
+        else:
+            request_args.url = ""
+
+    return all_results
 
 
 class FeedbinError(Exception):

@@ -14,7 +14,7 @@ Docs:
 
 import typer
 
-import feedbin.cli as feedbin_cli
+import feedbin.adapters.cli as feedbin_cli
 import modem.restart as modem_cli
 
 app = typer.Typer(no_args_is_help=True)

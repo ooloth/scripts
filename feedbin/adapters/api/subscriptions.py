@@ -7,7 +7,8 @@ Docs:
 
 from pydantic import BaseModel
 
-from feedbin.api import (
+from common.logs import log
+from feedbin.adapters.api import (
     API,
     FeedbinError,
     ForbiddenError,
@@ -17,7 +18,6 @@ from feedbin.api import (
     UnexpectedError,
     make_request,
 )
-from utils.logs import log
 
 
 class Subscription(BaseModel):
