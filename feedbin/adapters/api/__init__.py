@@ -1,6 +1,5 @@
 """
-Core functionality for interacting with all Feedbin API endpoints.
-
+Common functionality used by the Feedbin API endpoint adapters.
 """
 
 from dataclasses import dataclass

@@ -1,5 +1,5 @@
 """
-Helper functions for Feedbin's unread entries endpoint.
+Adapter for the Feedbin API unread entries endpoint.
 
 Docs:
  - https://github.com/feedbin/feedbin-api/blob/master/content/unread-entries.md

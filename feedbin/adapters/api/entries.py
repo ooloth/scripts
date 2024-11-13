@@ -1,5 +1,5 @@
 """
-Helper functions for Feedbin's entries endpoint.
+Adapter for the Feedbin API entries endpoint.
 
 Docs:
  - https://github.com/feedbin/feedbin-api/blob/master/content/entries.md#get-v2feeds203entriesjson
@@ -53,8 +53,8 @@ def get_feed_entries(
     except HTTPError as e:
         match e.response.status_code:
             case 403:
-                raise ForbiddenError("Feedbin: you are not subscribed to feed {feed_id}")
+                raise ForbiddenError("You are not subscribed to feed {feed_id}")
             case 404:
-                raise NotFoundError("Feedbin: no subscriptions found")
+                raise NotFoundError("No feed with an ID of {feed} found")
             case _:
-                raise UnexpectedError("Feedbin: unexpected error while getting subscriptions")
+                raise UnexpectedError("Unexpected error while getting entries for feed {feed_id}")

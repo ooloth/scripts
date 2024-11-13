@@ -1,5 +1,7 @@
 """
-CLI adapter for Feedbin. All typer commands should be defined in this module.
+CLI adapter for Feedbin. All usage of typer should occur in this module.
+
+TODO: move all "typer" usage here
 """
 
 from typing import Annotated

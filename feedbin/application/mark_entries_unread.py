@@ -1,3 +1,7 @@
+"""
+The core application logic for marking entries as unread.
+"""
+
 from common.logs import log
 from feedbin.adapters.api import UnexpectedError
 from feedbin.adapters.api.unread_entries import create_unread_entries

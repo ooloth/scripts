@@ -1,4 +1,8 @@
-# TODO: move all "typer" usage to feedbin.adapters.cli
+"""
+The core application logic for adding a new feed subscription to Feedbin.
+
+TODO: move all "typer" usage to feedbin.adapters.cli
+"""
 
 import os
 from typing import Annotated

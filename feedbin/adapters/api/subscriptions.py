@@ -1,5 +1,5 @@
 """
-Helper functions for Feedbin's subscriptions endpoint.
+Adapter for the Feedbin API subscriptions endpoint.
 
 Docs:
  - https://github.com/feedbin/feedbin-api/blob/master/content/subscriptions.md

@@ -1,3 +1,7 @@
+"""
+The core application logic for listing all entries of a Feedbin feed.
+"""
+
 from common.logs import log
 from feedbin.adapters.api import NotFoundError, UnexpectedError
 from feedbin.adapters.api.subscriptions import Subscription, get_subscriptions
