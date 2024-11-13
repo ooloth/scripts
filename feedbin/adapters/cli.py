@@ -45,9 +45,6 @@ def _ask_for_feed_choice(feeds: list[FeedOption]) -> FeedOption:
         raise typer.Abort()
 
 
-Unread = Annotated[bool, typer.Option("--unread", "-u", help="Mark backlog unread")]
-
-
 @app.command("add", no_args_is_help=True)
 def add(url: str, mark_backlog_unread: MarkUnread = False, dry_run: DryRun = False) -> None:
     dry_run = os.getenv("DRY_RUN") == "true" or dry_run
