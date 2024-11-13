@@ -41,15 +41,9 @@ def get_feed_entries(
 
     try:
         log.info(f"Feedbin: getting entries for feed {feed_id}")
-
         all_entries = make_paginated_request(request_args)
-        log.debug(f"🔍 all_entries: {all_entries}")
-
-        parsed_entries = [Entry(**entry) for entry in all_entries]
-        log.debug(f"🔍 parsed_entries: {parsed_entries}")
-
-        return parsed_entries
         # response = make_request(HTTPMethod.GET, request_args)
+        return [Entry(**entry) for entry in all_entries]
     except HTTPError as e:
         match e.response.status_code:
             case 403:

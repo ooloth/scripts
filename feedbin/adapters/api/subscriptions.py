@@ -67,17 +67,19 @@ def create_subscription(url: str) -> Subscription:
 
     match response.status_code:
         case 200 | 302:
-            log.debug("Existing subscription found")
-            return Subscription(**response.json())
+            subscription = Subscription(**response.json())
+            log.debug("Existing subscription found:", subscription)
+            return subscription
         case 201:
-            log.debug("Subscription created")
-            return Subscription(**response.json())
+            subscription = Subscription(**response.json())
+            log.debug("Subscription created:", subscription)
+            return subscription
         case 300:
-            log.debug("Multiple feed options found")
             options = [FeedOption(**feed) for feed in response.json()]
+            log.debug(f"{len(options)} feed options found:", options)
             raise MultipleChoicesError(options)
         case 404:
-            raise NotFoundError(f"No feed found at {url}")
+            raise NotFoundError(f"No feed found at '{url}'")
         case _:
             raise UnexpectedError("Unexpected error while creating subscription")
 
