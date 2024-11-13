@@ -39,7 +39,6 @@ class RequestArgs:
     url: str
     params: dict[str, Any] | None = None
     json: dict[str, Any] | None = None
-    headers: dict[str, str] | None = None
 
 
 def make_request(method: HTTPMethod, args: RequestArgs) -> requests.Response:
@@ -52,12 +51,16 @@ def make_request(method: HTTPMethod, args: RequestArgs) -> requests.Response:
     TODO:
      - Expect different request args for GET vs POST methods?
     """
+    headers = {}
+    if method == HTTPMethod.POST:
+        headers["Content-Type"] = "application/json; charset=utf-8"
+
     response = requests.request(
         method.value,
         args.url,
         json=args.json,
         params=args.params,
-        headers=args.headers,
+        headers=headers,
         auth=_get_auth(),
     )
     response.raise_for_status()

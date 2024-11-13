@@ -60,7 +60,6 @@ def create_subscription(url: str) -> Subscription:
     request_args = RequestArgs(
         url=f"{API}/subscriptions.json",
         json={"feed_url": url},
-        headers={"Content-Type": "application/json; charset=utf-8"},
     )
 
     log.info(f"Creating Feedbin subscription for '{url}'")

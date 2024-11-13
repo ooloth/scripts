@@ -20,7 +20,6 @@ def create_unread_entries(entry_ids: list[int]) -> list[int]:
     request_args = RequestArgs(
         url=f"{API}/unread-entries.json",
         json={"unread_entries": entry_ids},
-        headers={"Content-Type": "application/json; charset=utf-8"},
     )
 
     log.info(f"Marking {len(entry_ids)} entries as unread")
