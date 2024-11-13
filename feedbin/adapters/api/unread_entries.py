@@ -18,7 +18,7 @@ def create_unread_entries(entry_ids: list[int]) -> list[int]:
     no longer has access to the feed the entry belongs to.
     """
     request_args = RequestArgs(
-        url=f"{API}/unread-entries.json",
+        url=f"{API}/unread_entries.json",
         json={"unread_entries": entry_ids},
     )
 
