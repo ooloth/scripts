@@ -4,3 +4,4 @@
 # Mine
 .env
 .local_cache/*
+internet/*.txt
