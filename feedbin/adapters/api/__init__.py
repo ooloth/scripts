@@ -8,6 +8,7 @@ from typing import Any
 
 import requests
 
+from common.logs import log
 from common.secrets import get_secret
 
 API = "https://api.feedbin.com/v2"
@@ -69,7 +70,10 @@ def make_request(method: HTTPMethod, args: RequestArgs) -> requests.Response:
 
 def parse_link_header(link_header: str) -> dict[str, str]:
     """
-    Parse the Link header to extract URLs for pagination.
+    Parse the "links" header to extract URLs for pagination.
+
+    Example:
+     - '<https://api.feedbin.com/v2/feeds/1079883/entries.json?page=2>'
 
     Docs:
      - https://github.com/feedbin/feedbin-api?tab=readme-ov-file#pagination
@@ -94,7 +98,7 @@ def make_paginated_request(request_args: RequestArgs) -> list[dict[str, Any]]:
     while request_args.url:
         response = make_request(HTTPMethod.GET, request_args)
         all_results.extend(response.json())
-        link_header = response.headers.get("Link")
+        link_header = response.headers.get("links")
         if link_header:
             links = parse_link_header(link_header)
             request_args.url = links.get("next", "")
