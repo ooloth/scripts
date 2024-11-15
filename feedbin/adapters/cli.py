@@ -49,7 +49,7 @@ def _ask_for_feed_choice(feeds: list[FeedOption]) -> FeedOption:
 def add(url: str, mark_backlog_unread: MarkUnread = False, dry_run: DryRun = False) -> None:
     dry_run = os.getenv("DRY_RUN") == "true" or dry_run
 
-    typer.confirm(f"🔖 Subscribe to '{url}'?", abort=True)
+    typer.confirm(f"🔖 Subscribe to '{url}'?", default=True, abort=True)
 
     if dry_run:
         log.warning("🌵 Skipping subscription (dry run)")
@@ -61,17 +61,18 @@ def add(url: str, mark_backlog_unread: MarkUnread = False, dry_run: DryRun = Fal
         chosen_feed = _ask_for_feed_choice(e.choices)
         new_subscription = add_subscription(chosen_feed.feed_url)
 
-    mark_backlog_unread = typer.confirm("🔖 Mark backlog unread?", default=mark_backlog_unread)
+    log.info("🔍 Counting backlog entries")
+    entries = get_feed_entries(new_subscription.feed_id)
+    entry_ids = [entry.id for entry in entries]
+
+    mark_backlog_unread = typer.confirm(
+        f"🔖 There are {len(entry_ids)} backlog entries. Mark all as unread?", abort=True
+    )
 
     if not mark_backlog_unread:
         rich.print("👋 You're all set!")
         return
 
-    log.info("🔖 Getting all entries")
-    entries = get_feed_entries(new_subscription.feed_id)
-    entry_ids = [entry.id for entry in entries]
-
-    typer.confirm(f"🔖 There are {len(entry_ids)} entries. Mark all as unread?", abort=True)
     mark_entries_unread(entry_ids)
 
     # TODO: get all entry ids for this subscription via get_feed_entries
