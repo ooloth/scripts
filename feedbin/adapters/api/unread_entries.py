@@ -8,6 +8,8 @@ Docs:
 from common.logs import log
 from feedbin.adapters.api import API, HTTPMethod, RequestArgs, UnexpectedError, make_request
 
+BATCH_SIZE = 1000
+
 
 def create_unread_entries(entry_ids: list[int]) -> list[int]:
     """
@@ -17,23 +19,32 @@ def create_unread_entries(entry_ids: list[int]) -> list[int]:
     If any IDs that were sent are not returned in the response, it usually means the user
     no longer has access to the feed the entry belongs to.
     """
-    request_args = RequestArgs(
-        url=f"{API}/unread_entries.json",
-        json={"unread_entries": entry_ids},
-    )
+    all_marked_as_unread = []
+    all_not_marked_as_unread = []
 
-    log.info(f"Marking {len(entry_ids)} entries as unread")
-    response = make_request(HTTPMethod.POST, request_args)
+    for i in range(0, len(entry_ids), BATCH_SIZE):
+        batch = entry_ids[i : i + BATCH_SIZE]
+        log.debug(f"Marking {len(batch)} entries as unread")
 
-    match response.status_code:
-        case 200:
-            entry_ids_marked_as_unread = response.json()
-            log.info(f"Marked {len(entry_ids_marked_as_unread)} entries as unread")
+        request_args = RequestArgs(
+            url=f"{API}/unread_entries.json",
+            json={"unread_entries": batch},
+        )
 
-            entry_ids_not_marked_as_unread = set(entry_ids) - set(entry_ids_marked_as_unread)
-            if entry_ids_not_marked_as_unread:
-                log.warning(f"Failed to mark the following entries as unread: {entry_ids_not_marked_as_unread}")
+        response = make_request(HTTPMethod.POST, request_args)
 
-            return entry_ids_marked_as_unread
-        case _:
-            raise UnexpectedError("Unexpected error while marking entries as unread")
+        match response.status_code:
+            case 200:
+                entry_ids_marked_as_unread = response.json()
+                log.debug(f"Marked {len(entry_ids_marked_as_unread)} entries as unread")
+
+                entry_ids_not_marked_as_unread = set(batch) - set(entry_ids_marked_as_unread)
+                if entry_ids_not_marked_as_unread:
+                    log.warning(f"Failed to mark the following entries as unread: {entry_ids_not_marked_as_unread}")
+
+                all_marked_as_unread.extend(entry_ids_marked_as_unread)
+                all_not_marked_as_unread.extend(entry_ids_not_marked_as_unread)
+            case _:
+                raise UnexpectedError("Unexpected error while marking entries as unread")
+
+    return all_marked_as_unread, all_not_marked_as_unread

@@ -8,7 +8,11 @@ from feedbin.adapters.api.unread_entries import create_unread_entries
 
 
 def mark_entries_unread(entry_ids: list[int]) -> None:
-    """Mark entries as unread."""
+    """
+    Mark entries as unread.
+
+    TODO: handle entries that weren't marked as unread?
+    """
     if not entry_ids:
         log.info("No entries to mark as unread")
         return
