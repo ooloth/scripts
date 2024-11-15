@@ -1,7 +1,5 @@
 """
-The core application logic for adding a new feed subscription to Feedbin.
-
-TODO: move all "typer" usage to feedbin.adapters.cli
+The core application logic for subscribing to a new feed in Feedbin.
 """
 
 import typer
@@ -13,16 +11,8 @@ from feedbin.adapters.api.subscriptions import MultipleChoicesError, Subscriptio
 app = typer.Typer(no_args_is_help=True)
 
 
-# def _find_matching_subscription(url: str, subscriptions: list[Subscription]):
-#     url_without_trailing_slash = url.rstrip("/")
-#     for sub in subscriptions:
-#         if sub.site_url.strip("/") == url_without_trailing_slash:
-#             return sub
-#     return None
-
-
 def add_subscription(url: str) -> Subscription:
-    log.info(f"🔖 Subscribing to feed at '{url}'")
+    log.debug(f"🔖 Subscribing to feed at '{url}'")
 
     try:
         return create_subscription(url)

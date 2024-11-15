@@ -34,15 +34,15 @@ def get_feed_entries(
 
     TODO: accept a site_url and look up the feed_id internally?
     """
+    log.debug(f"Getting entries for feed {feed_id}")
+
     request_args = RequestArgs(
         url=f"{API}/feeds/{feed_id}/entries.json",
         params={"read": read, "starred": starred},
     )
 
     try:
-        log.debug(f"Getting entries for feed {feed_id}")
         all_entries = make_paginated_request(request_args)
-        # response = make_request(HTTPMethod.GET, request_args)
         entries = [Entry(**entry) for entry in all_entries]
         log.debug(f"Found {len(entries)} entries for feed {feed_id}")
         return entries

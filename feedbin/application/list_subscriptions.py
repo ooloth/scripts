@@ -8,6 +8,8 @@ from feedbin.adapters.api.subscriptions import Subscription, get_subscriptions
 
 
 def list_subscriptions() -> list[Subscription]:
+    log.debug("🔍 Getting all subscriptions")
+
     try:
         subscriptions = get_subscriptions()
         log.info(f"{len(subscriptions)} Feedbin subscriptions found")

@@ -17,6 +17,8 @@ def mark_entries_unread(entry_ids: list[int]) -> None:
         log.info("No entries to mark as unread")
         return
 
+    log.debug(f"Marking {len(entry_ids)} entries as unread")
+
     try:
         create_unread_entries(entry_ids)
     except UnexpectedError as e:
