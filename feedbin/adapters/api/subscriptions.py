@@ -25,12 +25,14 @@ def get_subscriptions() -> list[Subscription]:
     """Get all of my subscriptions."""
     request_args = RequestArgs(url=f"{API}/subscriptions.json")
 
-    log.info("Getting all Feedbin subscriptions")
+    log.debug("Getting all Feedbin subscriptions")
     response = make_request(HTTPMethod.GET, request_args)
 
     match response.status_code:
         case 200:
-            return [Subscription(**sub) for sub in response.json()]
+            subscriptions = [Subscription(**sub) for sub in response.json()]
+            log.debug(f"Found {len(subscriptions)} subscriptions")
+            return subscriptions
         case 403:
             raise ForbiddenError("Feedbin: you are not authenticated")
         case _:
@@ -62,17 +64,17 @@ def create_subscription(url: str) -> Subscription:
         json={"feed_url": url},
     )
 
-    log.info(f"Creating Feedbin subscription for '{url}'")
+    log.debug(f"Creating subscription for '{url}'")
     response = make_request(HTTPMethod.POST, request_args)
 
     match response.status_code:
         case 200 | 302:
             subscription = Subscription(**response.json())
-            log.debug("Existing subscription found:", subscription)
+            log.debug(f"Existing subscription found: {subscription}")
             return subscription
         case 201:
             subscription = Subscription(**response.json())
-            log.debug("Subscription created:", subscription)
+            log.debug(f"Subscription created: {subscription}")
             return subscription
         case 300:
             options = [FeedOption(**feed) for feed in response.json()]
@@ -95,7 +97,7 @@ def delete_subscription(subscription_id: int) -> None:
     """
     request_args = RequestArgs(url=f"{API}/subscriptions/{subscription_id}.json")
 
-    log.info(f"Deleting subscription {subscription_id}")
+    log.debug(f"Deleting subscription {subscription_id}")
     response = make_request(HTTPMethod.DELETE, request_args)
 
     match response.status_code:
