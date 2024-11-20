@@ -15,14 +15,15 @@ from rss.utils.feedbin import (
 )
 
 
+# TODO: add validation?
 class SubscriptionId(BaseModel):
     id: int
 
 
 class DeleteSubscriptionResult(Enum):
     NO_CONTENT = "✅ Subscription deleted"
-    FORBIDDEN = "⛔️ You do not own this subscription"
-    NOT_FOUND = "⛔️ No subscription found with that ID"
+    FORBIDDEN = "⛔️ You do not own this Feedbin subscription ID"
+    NOT_FOUND = "⛔️ No Feedbin subscription found with that ID"
     UNEXPECTED_STATUS_CODE = "🚨 Unexpected status code while deleting subscription"
     HTTP_ERROR = "🚨 HTTP error while deleting subscription"
     UNEXPECTED_ERROR = "🚨 Unexpected error while deleting subscription"

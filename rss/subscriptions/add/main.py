@@ -6,22 +6,23 @@ from common.logs import log
 from rss.subscriptions.add.feedbin import FeedUrl, create_subscription
 
 
-def main(unvalidated_url: str) -> None:
-    log.debug(f"👀 Validating URL '{unvalidated_url}'")
-    validated_url = FeedUrl(url=unvalidated_url)
-
-    log.debug(f"💪 Creating subscription for '{validated_url.url}'")
-    result, data = create_subscription(validated_url)
+def main(url: FeedUrl) -> None:
+    log.debug(f"💪 Creating subscription for '{url.url}'")
+    result, data = create_subscription(url)
 
     log.debug(f"{result.value}: {data}")
     log.debug("👍 Done adding subscription")
 
 
 if __name__ == "__main__":
-    # search_term = sys.argv[1] - use feeds/search?
+    # TODO: pivat to using feeds/search? can I send both URLs and search terms there?
     if len(sys.argv) < 2:
         print("Usage: PYTHONPATH=. uv run rss12/subscriptions/add/main.py <url>")
         sys.exit(1)
 
-    url = sys.argv[1]
-    main(url)
+    unvalidated_url = sys.argv[1]
+
+    log.debug(f"👀 Validating URL '{unvalidated_url}'")
+    validated_url = FeedUrl(url=unvalidated_url)
+
+    main(validated_url)

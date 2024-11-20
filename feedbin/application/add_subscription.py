@@ -2,13 +2,9 @@
 The core application logic for subscribing to a new feed in Feedbin.
 """
 
-import typer
-
 from common.logs import log
 from feedbin.adapters.api import NotFoundError, UnexpectedError
 from feedbin.adapters.api.subscriptions import MultipleChoicesError, Subscription, create_subscription
-
-app = typer.Typer(no_args_is_help=True)
 
 
 def add_subscription(url: str) -> Subscription:

@@ -1,7 +1,5 @@
 """
 CLI adapter for Feedbin. All usage of typer should occur in this module.
-
-TODO: move all "typer" usage here
 """
 
 import os

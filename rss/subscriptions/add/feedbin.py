@@ -9,12 +9,9 @@ from requests import HTTPError
 from rss.subscriptions.entities import Subscription
 from rss.utils.feedbin import API, HTTPMethod, RequestArgs, make_request
 
-ENDPOINT = "subscriptions.json"
 
-
+# TODO: add validation?
 class FeedUrl(BaseModel):
-    """TODO: add validation logic?"""
-
     url: str
 
 
@@ -26,8 +23,8 @@ class FeedOption(BaseModel):
 class CreateSubscriptionResult(Enum):
     CREATED = "✅ Subscription created"
     EXISTS = "✅ Subscription already exists"
-    MULTIPLE_CHOICES = "🥞 Multiple feed options found"
-    NOT_FOUND = "⛔️ No feed found at provided URL"
+    MULTIPLE_CHOICES = "🥞 Multiple RSS feeds found"
+    NOT_FOUND = "⛔️ No RSS feed found at that URL"
     UNEXPECTED_STATUS_CODE = "🚨 Unexpected status code while creating subscription"
     HTTP_ERROR = "🚨 HTTP error while creating subscription"
     UNEXPECTED_ERROR = "🚨 Unexpected error while creating subscription"
@@ -52,7 +49,7 @@ def create_subscription(url: FeedUrl) -> CreateSubscriptionOutput:
      - https://github.com/feedbin/feedbin-api/blob/master/content/subscriptions.md#create-subscription
     """
     try:
-        request_args = RequestArgs(url=f"{API}/{ENDPOINT}", json={"feed_url": url.url})
+        request_args = RequestArgs(url=f"{API}/subscriptions.json", json={"feed_url": url.url})
         response = make_request(HTTPMethod.POST, request_args)
 
         match response.status_code:

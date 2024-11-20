@@ -6,12 +6,9 @@ from common.logs import log
 from rss.subscriptions.delete.feedbin import SubscriptionId, delete_subscription
 
 
-def main(unvalidated_subscription_id: int) -> None:
-    log.debug(f"👀 Validating subscription ID '{unvalidated_subscription_id}'")
-    validated_id = SubscriptionId(id=unvalidated_subscription_id)
-
-    log.debug(f"💪 Deleting subscription ID '{validated_id.id}'")
-    result, data = delete_subscription(validated_id)
+def main(subscription_id: SubscriptionId) -> None:
+    log.debug(f"💪 Deleting subscription ID {subscription_id.id}")
+    result, data = delete_subscription(subscription_id)
 
     log.debug(f"{result.value}: {data}")
     log.debug("👍 Done deleting subscription")
@@ -22,5 +19,9 @@ if __name__ == "__main__":
         print("Usage: PYTHONPATH=. uv run rss12/domain/add_subscription.py <url>")
         sys.exit(1)
 
-    subscription_id = int(sys.argv[1])
-    main(subscription_id)
+    unvalidated_subscription_id = int(sys.argv[1])
+
+    log.debug(f"👀 Validating subscription ID {unvalidated_subscription_id}")
+    validated_subscription_id = SubscriptionId(id=unvalidated_subscription_id)
+
+    main(validated_subscription_id)

@@ -8,7 +8,6 @@ from typing import Any
 
 import requests
 
-from common.logs import log
 from common.secrets import get_secret
 
 API = "https://api.feedbin.com/v2"
