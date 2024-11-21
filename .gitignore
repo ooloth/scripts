@@ -4,4 +4,5 @@
 # Mine
 .env
 .local_cache/*
+*.log
 internet/*.txt
