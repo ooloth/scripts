@@ -34,7 +34,7 @@ CreateSubscriptionOutput = (
     tuple[Literal[CreateSubscriptionResult.CREATED], Subscription]
     | tuple[Literal[CreateSubscriptionResult.EXISTS], Subscription]
     | tuple[Literal[CreateSubscriptionResult.MULTIPLE_CHOICES], list[FeedOption]]
-    | tuple[Literal[CreateSubscriptionResult.NOT_FOUND], None]
+    | tuple[Literal[CreateSubscriptionResult.NOT_FOUND], int]
     | tuple[Literal[CreateSubscriptionResult.UNEXPECTED_STATUS_CODE], int]
     | tuple[Literal[CreateSubscriptionResult.HTTP_ERROR], str]
     | tuple[Literal[CreateSubscriptionResult.UNEXPECTED_ERROR], str]
@@ -60,11 +60,11 @@ def create_subscription(url: FeedUrl) -> CreateSubscriptionOutput:
             case 300:
                 options = [FeedOption(**feed) for feed in response.json()]
                 return CreateSubscriptionResult.MULTIPLE_CHOICES, options
-            case 404:
-                return CreateSubscriptionResult.NOT_FOUND, None
             case _:
                 return CreateSubscriptionResult.UNEXPECTED_STATUS_CODE, response.status_code
     except HTTPError as e:
+        if e.response.status_code == 404:
+            return CreateSubscriptionResult.NOT_FOUND, e.response.status_code
         return CreateSubscriptionResult.HTTP_ERROR, str(e)
     except Exception as e:
         return CreateSubscriptionResult.UNEXPECTED_ERROR, str(e)

@@ -32,7 +32,7 @@ class DeleteSubscriptionResult(Enum):
 DeleteSubscriptionOutput = (
     tuple[Literal[DeleteSubscriptionResult.NO_CONTENT], None]
     | tuple[Literal[DeleteSubscriptionResult.FORBIDDEN], int]
-    | tuple[Literal[DeleteSubscriptionResult.NOT_FOUND], None]
+    | tuple[Literal[DeleteSubscriptionResult.NOT_FOUND], int]
     | tuple[Literal[DeleteSubscriptionResult.UNEXPECTED_STATUS_CODE], int]
     | tuple[Literal[DeleteSubscriptionResult.HTTP_ERROR], str]
     | tuple[Literal[DeleteSubscriptionResult.UNEXPECTED_ERROR], str]
@@ -53,13 +53,14 @@ def delete_subscription(subscription_id: SubscriptionId) -> DeleteSubscriptionOu
         match response.status_code:
             case 204:
                 return DeleteSubscriptionResult.NO_CONTENT, None
-            case 403:
-                return DeleteSubscriptionResult.FORBIDDEN, subscription_id.id
-            case 404:
-                return DeleteSubscriptionResult.NOT_FOUND, None
             case _:
                 raise UnexpectedError("Unexpected error while deleting subscription")
     except HTTPError as e:
+        match e.response.status_code:
+            case 403:
+                return DeleteSubscriptionResult.FORBIDDEN, subscription_id.id
+            case 404:
+                return DeleteSubscriptionResult.NOT_FOUND, e.response.status_code
         return DeleteSubscriptionResult.HTTP_ERROR, str(e)
     except Exception as e:
         return DeleteSubscriptionResult.UNEXPECTED_ERROR, str(e)
