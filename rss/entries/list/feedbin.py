@@ -3,15 +3,11 @@
 from enum import Enum
 from typing import Literal
 
-from pydantic import BaseModel
 from requests import HTTPError
 
 from rss.entries.entities import Entry
+from rss.subscriptions.entities import FeedId
 from rss.utils.feedbin import API, RequestArgs, make_paginated_request
-
-
-class FeedId(BaseModel):
-    id: int
 
 
 class GetFeedEntriesResult(Enum):
@@ -25,8 +21,8 @@ class GetFeedEntriesResult(Enum):
 
 GetFeedEntriesOutput = (
     tuple[Literal[GetFeedEntriesResult.OK], list[Entry]]
-    | tuple[Literal[GetFeedEntriesResult.FORBIDDEN], int]
-    | tuple[Literal[GetFeedEntriesResult.NOT_FOUND], int]
+    | tuple[Literal[GetFeedEntriesResult.FORBIDDEN], FeedId]
+    | tuple[Literal[GetFeedEntriesResult.NOT_FOUND], FeedId]
     | tuple[Literal[GetFeedEntriesResult.UNEXPECTED_STATUS_CODE], int]
     | tuple[Literal[GetFeedEntriesResult.HTTP_ERROR], str]
     | tuple[Literal[GetFeedEntriesResult.UNEXPECTED_ERROR], str]
@@ -53,7 +49,7 @@ def get_feed_entries(
     - accept a site_url and look up the feed_id internally?
     """
     request_args = RequestArgs(
-        url=f"{API}/feeds/{feed_id.id}/entries.json",
+        url=f"{API}/feeds/{feed_id}/entries.json",
         params={"read": read, "starred": starred},
     )
 
@@ -64,9 +60,9 @@ def get_feed_entries(
     except HTTPError as e:
         match e.response.status_code:
             case 403:
-                return GetFeedEntriesResult.FORBIDDEN, feed_id.id
+                return GetFeedEntriesResult.FORBIDDEN, feed_id
             case 404:
-                return GetFeedEntriesResult.NOT_FOUND, feed_id.id
+                return GetFeedEntriesResult.NOT_FOUND, feed_id
         return GetFeedEntriesResult.HTTP_ERROR, str(e)
     except Exception as e:
         return GetFeedEntriesResult.UNEXPECTED_ERROR, str(e)

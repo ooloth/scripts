@@ -22,7 +22,7 @@ def main(subscription_id: SubscriptionId) -> None:
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: PYTHONPATH=. uv run rss12/domain/add_subscription.py <url>")
+        print("Usage: PYTHONPATH=. uv run rss/subscriptions/delete/main.py <subscription_id>")
         sys.exit(1)
 
     unvalidated_subscription_id = int(sys.argv[1])

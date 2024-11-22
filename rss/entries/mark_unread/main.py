@@ -3,7 +3,8 @@
 import sys
 
 from common.logs import log
-from rss.entries.mark_unread.feedbin import EntryId, UnreadEntriesResponse, create_unread_entries
+from rss.entries.entities import EntryId
+from rss.entries.mark_unread.feedbin import UnreadEntriesResponse, create_unread_entries
 
 
 def main(entry_ids: list[EntryId]) -> None:
@@ -32,6 +33,6 @@ if __name__ == "__main__":
     unvalidated_entry_ids = [int(id) for id in parsed_entry_ids]
 
     log.debug("👀 Validating entry IDs")
-    validated_entry_ids = [EntryId(id=int(id)) for id in sys.argv[1].split(",")]
+    validated_entry_ids = [EntryId(int(id)) for id in sys.argv[1].split(",")]
 
     main(validated_entry_ids)

@@ -7,7 +7,7 @@ from rss.entries.list.feedbin import FeedId, get_feed_entries
 
 
 def main(feed_id: FeedId) -> None:
-    log.debug(f"💪 Getting all entries for feed {feed_id.id}")
+    log.debug(f"💪 Getting all entries for feed {feed_id}")
 
     result, data = get_feed_entries(feed_id)
     log.debug(f"{result.value}: {data}")
