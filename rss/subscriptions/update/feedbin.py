@@ -5,7 +5,7 @@ from typing import Literal
 
 from requests import HTTPError
 
-from rss.subscriptions.entities import Subscription, SubscriptionId, SubscriptionTitle
+from rss.subscriptions.entities import Subscription, SubscriptionId, SubscriptionTitleWithSuffix
 from rss.utils.feedbin import API, HTTPMethod, RequestArgs, make_request
 
 
@@ -20,26 +20,27 @@ class UpdateSubscriptionResult(Enum):
 
 GetFeedEntriesOutput = (
     tuple[Literal[UpdateSubscriptionResult.OK], Subscription]
-    | tuple[Literal[UpdateSubscriptionResult.FORBIDDEN], int]
-    | tuple[Literal[UpdateSubscriptionResult.NOT_FOUND], int]
+    | tuple[Literal[UpdateSubscriptionResult.FORBIDDEN], SubscriptionId]
+    | tuple[Literal[UpdateSubscriptionResult.NOT_FOUND], SubscriptionId]
     | tuple[Literal[UpdateSubscriptionResult.UNEXPECTED_STATUS_CODE], int]
     | tuple[Literal[UpdateSubscriptionResult.HTTP_ERROR], str]
     | tuple[Literal[UpdateSubscriptionResult.UNEXPECTED_ERROR], str]
 )
 
 
-def update_subscription(subscription_id: SubscriptionId, new_title: SubscriptionTitle) -> GetFeedEntriesOutput:
+def update_subscription(
+    subscription_id: SubscriptionId,
+    new_title: SubscriptionTitleWithSuffix,
+) -> GetFeedEntriesOutput:
     """
     Update an existing RSS feed subscription with the provided title (which must end with an emoji).
 
     Docs:
     - https://github.com/feedbin/feedbin-api/blob/master/content/subscriptions.md#update-subscription
     """
-    id = subscription_id.id
-
     request_args = RequestArgs(
-        url=f"{API}/subscriptions/{id}.json",
-        json={"title": new_title.title},
+        url=f"{API}/subscriptions/{subscription_id}.json",
+        json={"title": new_title},
     )
 
     try:
@@ -53,7 +54,7 @@ def update_subscription(subscription_id: SubscriptionId, new_title: Subscription
     except HTTPError as e:
         match e.response.status_code:
             case 403:
-                return UpdateSubscriptionResult.FORBIDDEN, id
+                return UpdateSubscriptionResult.FORBIDDEN, subscription_id
             case 404:
-                return UpdateSubscriptionResult.NOT_FOUND, id
+                return UpdateSubscriptionResult.NOT_FOUND, subscription_id
         return UpdateSubscriptionResult.HTTP_ERROR, str(e)

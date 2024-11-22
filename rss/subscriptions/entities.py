@@ -2,11 +2,17 @@ from pydantic import BaseModel, field_validator
 
 
 class FeedId(BaseModel):
-    id: int
+    __root__: int
+
+    def __init__(self, x: int) -> None:
+        super().__init__(__root__=x)
 
 
 class FeedUrl(BaseModel):
-    url: str
+    __root__: str
+
+    def __init__(self, x: str) -> None:
+        super().__init__(__root__=x)
 
     @field_validator("url")
     @classmethod
@@ -21,13 +27,19 @@ class FeedOption(BaseModel):
 
 
 class SubscriptionId(BaseModel):
-    id: int
+    __root__: int
+
+    def __init__(self, x: int) -> None:
+        super().__init__(__root__=x)
 
 
-class SubscriptionTitle(BaseModel):
-    title: str
+class SubscriptionTitleWithSuffix(BaseModel):
+    __root__: str
 
-    @field_validator("title")
+    def __init__(self, x: str) -> None:
+        super().__init__(__root__=x)
+
+    @field_validator("__root__")
     @classmethod
     def ends_with_emoji(cls, title: str) -> str:
         if not title.endswith(" 📖") and not title.endswith(" 📺"):

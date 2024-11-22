@@ -23,7 +23,7 @@ CreateSubscriptionOutput = (
     tuple[Literal[CreateSubscriptionResult.CREATED], Subscription]
     | tuple[Literal[CreateSubscriptionResult.EXISTS], Subscription]
     | tuple[Literal[CreateSubscriptionResult.MULTIPLE_CHOICES], list[FeedOption]]
-    | tuple[Literal[CreateSubscriptionResult.NOT_FOUND], int]
+    | tuple[Literal[CreateSubscriptionResult.NOT_FOUND], FeedUrl]
     | tuple[Literal[CreateSubscriptionResult.UNEXPECTED_STATUS_CODE], int]
     | tuple[Literal[CreateSubscriptionResult.HTTP_ERROR], str]
     | tuple[Literal[CreateSubscriptionResult.UNEXPECTED_ERROR], str]
@@ -38,7 +38,7 @@ def create_subscription(url: FeedUrl) -> CreateSubscriptionOutput:
     - https://github.com/feedbin/feedbin-api/blob/master/content/subscriptions.md#create-subscription
     """
     try:
-        request_args = RequestArgs(url=f"{API}/subscriptions.json", json={"feed_url": url.url})
+        request_args = RequestArgs(url=f"{API}/subscriptions.json", json={"feed_url": url})
         response = make_request(HTTPMethod.POST, request_args)
 
         match response.status_code:
@@ -53,7 +53,7 @@ def create_subscription(url: FeedUrl) -> CreateSubscriptionOutput:
                 return CreateSubscriptionResult.UNEXPECTED_STATUS_CODE, response.status_code
     except HTTPError as e:
         if e.response.status_code == 404:
-            return CreateSubscriptionResult.NOT_FOUND, e.response.status_code
+            return CreateSubscriptionResult.NOT_FOUND, url
         return CreateSubscriptionResult.HTTP_ERROR, str(e)
     except Exception as e:
         return CreateSubscriptionResult.UNEXPECTED_ERROR, str(e)
