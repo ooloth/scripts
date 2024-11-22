@@ -30,6 +30,7 @@ def _get_auth() -> tuple[str, str]:
 
 class HTTPMethod(Enum):
     GET = "GET"
+    PATCH = "PATCH"
     POST = "POST"
     DELETE = "DELETE"
 
@@ -52,7 +53,8 @@ def make_request(method: HTTPMethod, args: RequestArgs) -> requests.Response:
      - Expect different request args for GET vs POST methods?
     """
     headers = {}
-    if method == HTTPMethod.POST:
+
+    if method in (HTTPMethod.PATCH, HTTPMethod.POST):
         headers["Content-Type"] = "application/json; charset=utf-8"
 
     response = requests.request(
@@ -64,6 +66,7 @@ def make_request(method: HTTPMethod, args: RequestArgs) -> requests.Response:
         auth=_get_auth(),
     )
     response.raise_for_status()
+
     return response
 
 
