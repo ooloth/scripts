@@ -108,27 +108,3 @@ def make_paginated_request(request_args: RequestArgs) -> list[dict[str, Any]]:
             request_args.url = ""
 
     return all_results
-
-
-class FeedbinError(Exception):
-    """Base class for Feedbin API errors."""
-
-    pass
-
-
-class NotFoundError(FeedbinError):
-    """Raised when a resource is not found."""
-
-    pass
-
-
-class ForbiddenError(FeedbinError):
-    """Raised when the caller does not own a resource."""
-
-    pass
-
-
-class UnexpectedError(FeedbinError):
-    "Raised for unexpected errors."
-
-    pass

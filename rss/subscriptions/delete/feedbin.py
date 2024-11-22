@@ -10,7 +10,6 @@ from rss.utils.feedbin import (
     API,
     HTTPMethod,
     RequestArgs,
-    UnexpectedError,
     make_request,
 )
 
@@ -49,7 +48,7 @@ def delete_subscription(subscription_id: SubscriptionId) -> DeleteSubscriptionOu
             case 204:
                 return DeleteSubscriptionResult.NO_CONTENT, None
             case _:
-                raise UnexpectedError("Unexpected error while deleting subscription")
+                return DeleteSubscriptionResult.UNEXPECTED_STATUS_CODE, response.status_code
     except HTTPError as e:
         match e.response.status_code:
             case 403:
