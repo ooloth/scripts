@@ -29,10 +29,7 @@ if __name__ == "__main__":
     log.debug("🔪 Parsing entry IDs")
     parsed_entry_ids = sys.argv[1].split(",")  # or split on space?
 
-    log.debug("🔢 Converting entry IDs to integers")
-    unvalidated_entry_ids = [int(id) for id in parsed_entry_ids]
-
     log.debug("👀 Validating entry IDs")
-    validated_entry_ids = [EntryId(int(id)) for id in sys.argv[1].split(",")]
+    validated_entry_ids = [EntryId(int(id)) for id in parsed_entry_ids]
 
     main(validated_entry_ids)
