@@ -3,16 +3,21 @@
 from enum import Enum
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from requests import HTTPError
 
 from rss.subscriptions.entities import Subscription
 from rss.utils.feedbin import API, HTTPMethod, RequestArgs, make_request
 
 
-# TODO: add validation?
 class FeedUrl(BaseModel):
     url: str
+
+    @field_validator("url")
+    @classmethod
+    def is_domain_or_url(cls, url: str) -> str:
+        # TODO: add validation?
+        return url
 
 
 class FeedOption(BaseModel):

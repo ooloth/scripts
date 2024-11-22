@@ -8,9 +8,10 @@ from rss.subscriptions.delete.feedbin import SubscriptionId, delete_subscription
 
 def main(subscription_id: SubscriptionId) -> None:
     log.debug(f"💪 Deleting subscription ID {subscription_id.id}")
-    result, data = delete_subscription(subscription_id)
 
+    result, data = delete_subscription(subscription_id)
     log.debug(f"{result.value}: {data}")
+
     log.debug("👍 Done deleting subscription")
 
 
