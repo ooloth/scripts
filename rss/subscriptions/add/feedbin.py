@@ -3,26 +3,10 @@
 from enum import Enum
 from typing import Literal
 
-from pydantic import BaseModel, field_validator
 from requests import HTTPError
 
-from rss.subscriptions.entities import Subscription
+from rss.subscriptions.entities import FeedOption, FeedUrl, Subscription
 from rss.utils.feedbin import API, HTTPMethod, RequestArgs, make_request
-
-
-class FeedUrl(BaseModel):
-    url: str
-
-    @field_validator("url")
-    @classmethod
-    def is_domain_or_url(cls, url: str) -> str:
-        # TODO: add validation?
-        return url
-
-
-class FeedOption(BaseModel):
-    feed_url: str
-    title: str
 
 
 class CreateSubscriptionResult(Enum):
@@ -51,7 +35,7 @@ def create_subscription(url: FeedUrl) -> CreateSubscriptionOutput:
     Create a subscription from a website or feed URL (with or without the scheme).
 
     Docs:
-     - https://github.com/feedbin/feedbin-api/blob/master/content/subscriptions.md#create-subscription
+    - https://github.com/feedbin/feedbin-api/blob/master/content/subscriptions.md#create-subscription
     """
     try:
         request_args = RequestArgs(url=f"{API}/subscriptions.json", json={"feed_url": url.url})

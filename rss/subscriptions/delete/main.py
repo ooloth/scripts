@@ -1,9 +1,14 @@
 """Entry point for deleting an RSS feed subscription."""
 
+# TODO: support deleting based on a URL instead of an ID
+# > If an int, validate as an ID, then delete that subscription
+# > If a string, validate as a URL, then get list of all subscriptions, then find a match by site_url or feed_url and delete that subscription
+
 import sys
 
 from common.logs import log
-from rss.subscriptions.delete.feedbin import SubscriptionId, delete_subscription
+from rss.subscriptions.delete.feedbin import delete_subscription
+from rss.subscriptions.entities import SubscriptionId
 
 
 def main(subscription_id: SubscriptionId) -> None:

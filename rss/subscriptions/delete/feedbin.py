@@ -3,9 +3,9 @@
 from enum import Enum
 from typing import Literal
 
-from pydantic import BaseModel
 from requests import HTTPError
 
+from rss.subscriptions.entities import SubscriptionId
 from rss.utils.feedbin import (
     API,
     HTTPMethod,
@@ -13,11 +13,6 @@ from rss.utils.feedbin import (
     UnexpectedError,
     make_request,
 )
-
-
-# TODO: add validation?
-class SubscriptionId(BaseModel):
-    id: int
 
 
 class DeleteSubscriptionResult(Enum):

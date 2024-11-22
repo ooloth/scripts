@@ -1,6 +1,5 @@
 """Feedbin API interactions for listing all entries in an RSS feed subscription."""
 
-from dataclasses import dataclass
 from enum import Enum
 from typing import Literal
 
@@ -13,13 +12,6 @@ from rss.utils.feedbin import API, RequestArgs, make_paginated_request
 
 class FeedId(BaseModel):
     id: int
-
-
-@dataclass(frozen=True)
-class GetFeedEntriesInput:
-    feed_id: FeedId
-    read: bool | None = None
-    starred: bool | None = None
 
 
 class GetFeedEntriesResult(Enum):
@@ -42,7 +34,6 @@ GetFeedEntriesOutput = (
 
 
 def get_feed_entries(
-    # args: GetFeedEntriesInput,
     feed_id: FeedId,
     *,
     read: bool | None = None,
@@ -52,14 +43,14 @@ def get_feed_entries(
     Get all entries for a feed.
 
     Params:
-     - read: Filter by read status. Options: True, False, None.
-     - starred: Filter by starred status. Options: True, False, None.
+    - read: Filter by read status. Options: True, False, None.
+    - starred: Filter by starred status. Options: True, False, None.
 
     Docs:
     - https://github.com/feedbin/feedbin-api/blob/master/content/entries.md#get-v2feeds203entriesjson
 
     TODO:
-     - accept a site_url and look up the feed_id internally?
+    - accept a site_url and look up the feed_id internally?
     """
     request_args = RequestArgs(
         url=f"{API}/feeds/{feed_id.id}/entries.json",
