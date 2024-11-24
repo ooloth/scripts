@@ -5,4 +5,5 @@
 .env
 .local_cache/*
 *.log
+**/.secrets/*
 internet/*.txt
