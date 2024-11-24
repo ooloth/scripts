@@ -5,7 +5,7 @@ from typing import Literal
 
 from requests import HTTPError
 
-from rss.subscriptions.entities import FeedOption, FeedUrl, Subscription
+from rss.entities import FeedOption, FeedUrl, Subscription
 from rss.utils.feedbin import API, HTTPMethod, RequestArgs, make_request
 
 
@@ -38,7 +38,7 @@ def create_subscription(url: FeedUrl) -> CreateSubscriptionOutput:
     - https://github.com/feedbin/feedbin-api/blob/master/content/subscriptions.md#create-subscription
     """
     try:
-        request_args = RequestArgs(url=f"{API}/subscriptions.json", json={"feed_url": url})
+        request_args = RequestArgs(url=f"{API}/subscriptions.json", json={"feed_url": url.url})
         response = make_request(HTTPMethod.POST, request_args)
 
         match response.status_code:

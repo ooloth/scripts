@@ -3,12 +3,12 @@
 import sys
 
 from common.logs import log
+from rss.entities import FeedUrl
 from rss.subscriptions.add.feedbin import create_subscription
-from rss.subscriptions.entities import FeedUrl
 
 
 def main(url: FeedUrl) -> None:
-    log.debug(f"💪 Creating subscription for '{url}'")
+    log.debug(f"💪 Creating subscription for '{url.url}'")
 
     result, data = create_subscription(url)
     log.debug(f"{result.value}: {data}")
@@ -24,6 +24,6 @@ if __name__ == "__main__":
     unvalidated_url = sys.argv[1]
 
     log.debug(f"👀 Validating URL '{unvalidated_url}'")
-    validated_url = FeedUrl(unvalidated_url)
+    validated_url = FeedUrl(url=unvalidated_url)
 
     main(validated_url)

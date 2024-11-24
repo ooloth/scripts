@@ -5,8 +5,7 @@ from typing import Literal
 
 from requests import HTTPError
 
-from rss.entries.entities import Entry
-from rss.subscriptions.entities import FeedId
+from rss.entities import Entry, FeedId
 from rss.utils.feedbin import API, RequestArgs, make_paginated_request
 
 
@@ -49,7 +48,7 @@ def get_feed_entries(
     - accept a site_url and look up the feed_id internally?
     """
     request_args = RequestArgs(
-        url=f"{API}/feeds/{feed_id}/entries.json",
+        url=f"{API}/feeds/{feed_id.id}/entries.json",
         params={"read": read, "starred": starred},
     )
 

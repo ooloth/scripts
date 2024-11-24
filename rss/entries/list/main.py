@@ -3,12 +3,12 @@
 import sys
 
 from common.logs import log
+from rss.entities import FeedId
 from rss.entries.list.feedbin import get_feed_entries
-from rss.subscriptions.entities import FeedId
 
 
 def main(feed_id: FeedId) -> None:
-    log.debug(f"💪 Getting all entries for feed {feed_id}")
+    log.debug(f"💪 Getting all entries for feed {feed_id.id}")
 
     result, data = get_feed_entries(feed_id)
     log.debug(f"{result.value}: {data}")
@@ -24,6 +24,6 @@ if __name__ == "__main__":
     unvalidated_feed_id = int(sys.argv[1])
 
     log.debug(f"👀 Validating feed ID {unvalidated_feed_id}")
-    validated_id = FeedId(unvalidated_feed_id)
+    validated_id = FeedId(id=unvalidated_feed_id)
 
     main(validated_id)

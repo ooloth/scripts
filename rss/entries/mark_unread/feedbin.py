@@ -6,7 +6,7 @@ from typing import Literal
 
 from requests import HTTPError
 
-from rss.entries.entities import EntryId
+from rss.entities import EntryId
 from rss.utils.feedbin import API, HTTPMethod, RequestArgs, make_request
 
 MAX_ENTRIES_PER_BATCH = 1000
@@ -44,7 +44,7 @@ def create_unread_entries(entry_ids: list[EntryId]) -> CreateUnreadEntriesOutput
     Docs:
     - https://github.com/feedbin/feedbin-api/blob/master/content/unread-entries.md
     """
-    ids_as_ints = [id.__root__ for id in entry_ids]
+    ids_as_ints = [id.id for id in entry_ids]
     marked_as_unread: set[int] = set()
     not_marked_as_unread: set[int] = set()
 
@@ -73,6 +73,6 @@ def create_unread_entries(entry_ids: list[EntryId]) -> CreateUnreadEntriesOutput
             return CreateUnreadEntriesResult.UNEXPECTED_ERROR, str(e)
 
     return CreateUnreadEntriesResult.OK, UnreadEntriesResponse(
-        marked_as_unread={EntryId(id) for id in marked_as_unread},
-        not_marked_as_unread={EntryId(id) for id in not_marked_as_unread},
+        marked_as_unread={EntryId(id=id) for id in marked_as_unread},
+        not_marked_as_unread={EntryId(id=id) for id in not_marked_as_unread},
     )

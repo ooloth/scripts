@@ -5,7 +5,7 @@ from typing import Literal
 
 from requests import HTTPError
 
-from rss.subscriptions.entities import SubscriptionId
+from rss.entities import SubscriptionId
 from rss.utils.feedbin import (
     API,
     HTTPMethod,
@@ -41,7 +41,7 @@ def delete_subscription(subscription_id: SubscriptionId) -> DeleteSubscriptionOu
      - https://github.com/feedbin/feedbin-api/blob/master/content/subscriptions.md#delete-subscription
     """
     try:
-        request_args = RequestArgs(url=f"{API}/subscriptions/{subscription_id}.json")
+        request_args = RequestArgs(url=f"{API}/subscriptions/{subscription_id.id}.json")
         response = make_request(HTTPMethod.DELETE, request_args)
 
         match response.status_code:

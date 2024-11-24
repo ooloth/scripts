@@ -5,7 +5,7 @@ from typing import Literal
 
 from requests import HTTPError
 
-from rss.subscriptions.entities import Subscription, SubscriptionId, SubscriptionTitleWithSuffix
+from rss.entities import Subscription, SubscriptionId, SubscriptionTitleWithSuffix
 from rss.utils.feedbin import API, HTTPMethod, RequestArgs, make_request
 
 
@@ -39,8 +39,8 @@ def update_subscription(
     - https://github.com/feedbin/feedbin-api/blob/master/content/subscriptions.md#update-subscription
     """
     request_args = RequestArgs(
-        url=f"{API}/subscriptions/{subscription_id}.json",
-        json={"title": new_title},
+        url=f"{API}/subscriptions/{subscription_id.id}.json",
+        json={"title": new_title.title},
     )
 
     try:

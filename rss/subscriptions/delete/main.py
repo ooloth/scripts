@@ -7,12 +7,12 @@
 import sys
 
 from common.logs import log
+from rss.entities import SubscriptionId
 from rss.subscriptions.delete.feedbin import delete_subscription
-from rss.subscriptions.entities import SubscriptionId
 
 
 def main(subscription_id: SubscriptionId) -> None:
-    log.debug(f"💪 Deleting subscription ID {subscription_id}")
+    log.debug(f"💪 Deleting subscription ID {subscription_id.id}")
 
     result, data = delete_subscription(subscription_id)
     log.debug(f"{result.value}: {data}")
@@ -28,6 +28,6 @@ if __name__ == "__main__":
     unvalidated_subscription_id = int(sys.argv[1])
 
     log.debug(f"👀 Validating subscription ID {unvalidated_subscription_id}")
-    validated_subscription_id = SubscriptionId(unvalidated_subscription_id)
+    validated_subscription_id = SubscriptionId(id=unvalidated_subscription_id)
 
     main(validated_subscription_id)

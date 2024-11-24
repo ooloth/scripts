@@ -3,7 +3,7 @@
 import sys
 
 from common.logs import log
-from rss.entries.entities import EntryId
+from rss.entities import EntryId
 from rss.entries.mark_unread.feedbin import UnreadEntriesResponse, create_unread_entries
 
 
@@ -23,13 +23,13 @@ def main(entry_ids: list[EntryId]) -> None:
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: PYTHONPATH=. uv run rss12/subscriptions/add/main.py <url>")
+        print("Usage: PYTHONPATH=. uv run rss/entries/mark_unready/main.py <entry-id,entry-id>")
         sys.exit(1)
 
     log.debug("🔪 Parsing entry IDs")
     parsed_entry_ids = sys.argv[1].split(",")  # or split on space?
 
     log.debug("👀 Validating entry IDs")
-    validated_entry_ids = [EntryId(int(id)) for id in parsed_entry_ids]
+    validated_entry_ids = [EntryId(id=int(id)) for id in parsed_entry_ids]
 
     main(validated_entry_ids)
