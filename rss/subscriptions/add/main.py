@@ -4,16 +4,20 @@ import sys
 
 from common.logs import log
 from rss.entities import FeedUrl
-from rss.subscriptions.add.feedbin import create_subscription
+from rss.subscriptions.add.feedbin import CreateSubscriptionOutput, create_subscription
 
 
-def main(url: FeedUrl) -> None:
+def main(url: FeedUrl) -> CreateSubscriptionOutput:
     log.debug(f"💪 Creating subscription for '{url.url}'")
 
-    result, data = create_subscription(url)
-    log.debug(f"{result.value}: {data}")
+    result = create_subscription(url)
+
+    outcome, data = result
+    log.debug(f"{outcome.value}: {data}")
 
     log.debug("👍 Done adding subscription")
+
+    return result
 
 
 if __name__ == "__main__":

@@ -18,7 +18,7 @@ class UpdateSubscriptionResult(Enum):
     UNEXPECTED_ERROR = "🚨 Unexpected error while updating subscription"
 
 
-GetFeedEntriesOutput = (
+UpdateSubscriptionOutput = (
     tuple[Literal[UpdateSubscriptionResult.OK], Subscription]
     | tuple[Literal[UpdateSubscriptionResult.FORBIDDEN], SubscriptionId]
     | tuple[Literal[UpdateSubscriptionResult.NOT_FOUND], SubscriptionId]
@@ -31,7 +31,7 @@ GetFeedEntriesOutput = (
 def update_subscription(
     subscription_id: SubscriptionId,
     new_title: SubscriptionTitleWithSuffix,
-) -> GetFeedEntriesOutput:
+) -> UpdateSubscriptionOutput:
     """
     Update an existing RSS feed subscription with the provided title (which must end with an emoji).
 
