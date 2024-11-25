@@ -49,7 +49,6 @@ GOOGLE_CLOUD_SCOPES = ["https://spreadsheets.google.com/feeds", "https://www.goo
 SHEET_NAME = "RSS Feed Wish List 🔖"
 DETAILS_COLUMN_NAME = "Details"
 FEED_ID_COLUMN_NAME = "Feed ID"
-STATUS_COLUMN_INDEX = 3
 STATUS_COLUMN_NAME = "Status"
 SUBSCRIPTION_ID_COLUMN_NAME = "Subscription ID"
 URL_COLUMN_NAME = "URL to subscribe to"
@@ -74,7 +73,6 @@ class Row(BaseModel):
     url: FeedUrl
 
 
-# Authenticate and create a client
 def get_authenticated_sheets_client(
     credentials_json: Path = GOOGLE_CLOUD_CREDENTIALS_JSON,
     scopes: list[str] = GOOGLE_CLOUD_SCOPES,
@@ -204,9 +202,9 @@ def update_row(
     row_values = [
         [
             row.status.value if isinstance(row.status, Status) else row.status,
-            str(row.details),
             row.subscription_id.id if isinstance(row.subscription_id, SubscriptionId) else row.subscription_id,
             row.feed_id.id if isinstance(row.feed_id, FeedId) else row.feed_id,
+            str(row.details),
         ]
     ]
 
@@ -220,11 +218,9 @@ def main() -> None:
     rows = get_rows(sheet)
     log.debug(f"🔍 rows: {rows}")
 
-    # TODO: sort/separate by status
+    # TODO: sort/separate by status first? append to next list when ready?
+    # TODO: call out multiple choices in terminal at end of run?
 
-    updated_rows: list[Row] = []
-
-    # TODO: Subscribe to URLs
     for row in rows:
         if row.status == Status.SUFFIX_ADDED:
             continue
@@ -233,9 +229,6 @@ def main() -> None:
             row_after_subscribing = subscribe_and_return_updated_row(row)
             log.debug(f"🔍 row_after_subscribing: {row_after_subscribing}")
             update_row(row=row_after_subscribing, row_index=row_after_subscribing.index, sheet=sheet)
-
-        # if row_after_subscribing.status != Status.SUBSCRIBED or not isinstance(row_after_subscribing.feed_id, FeedId):
-        #     continue
 
         if row.status not in {Status.BACKLOG_UNREAD, Status.SUFFIX_ADDED} and isinstance(
             row_after_subscribing.feed_id, FeedId
@@ -261,18 +254,6 @@ def main() -> None:
             log.debug(f"🔍 row_after_appending_suffixes: {row_after_appending_suffixes}")
             update_row(row=row_after_appending_suffixes, row_index=row_after_appending_suffixes.index, sheet=sheet)
 
-    # Update all rows in the sheet
-    # update_row_status(sheet=sheet, row_index=2, status=Status.SUBSCRIBED)
-
 
 if __name__ == "__main__":
     main()
-
-# TODO: get URLs from sheet
-# TODO: subscribe to URLs
-# TODO: update status in sheet
-# TODO: for multiple choices, add options to sheet
-# TODO: for errors, add error message to sheet
-# TODO: for successful subscriptions, mark backlog unread
-# TODO: for successful subscriptions, append correct suffix to title
-# TODO: for successful subscriptions, add feed title to sheet
