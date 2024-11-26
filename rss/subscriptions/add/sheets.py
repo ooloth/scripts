@@ -21,7 +21,7 @@ Step 3: Share Google Sheet
 
 from enum import Enum
 from pathlib import Path
-from typing import Literal, cast
+from typing import Literal
 
 from google.oauth2.service_account import Credentials
 from gspread.auth import authorize

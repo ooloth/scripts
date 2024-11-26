@@ -11,7 +11,7 @@ class Entry(BaseModel):
 
 
 class FeedOption(BaseModel):
-    feed_url: str
+    feed_url: FeedUrl
     title: str
 
 
