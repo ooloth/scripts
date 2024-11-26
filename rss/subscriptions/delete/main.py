@@ -12,7 +12,7 @@ from rss.subscriptions.delete.feedbin import delete_subscription
 
 
 def main(subscription_id: SubscriptionId) -> None:
-    log.debug(f"💪 Deleting subscription ID {subscription_id.id}")
+    log.debug(f"💪 Deleting subscription ID {subscription_id}")
 
     result, data = delete_subscription(subscription_id)
     log.debug(f"{result.value}: {data}")
@@ -25,9 +25,4 @@ if __name__ == "__main__":
         print("Usage: PYTHONPATH=. uv run rss/subscriptions/delete/main.py <subscription_id>")
         sys.exit(1)
 
-    unvalidated_subscription_id = int(sys.argv[1])
-
-    log.debug(f"👀 Validating subscription ID {unvalidated_subscription_id}")
-    validated_subscription_id = SubscriptionId(id=unvalidated_subscription_id)
-
-    main(validated_subscription_id)
+    main(SubscriptionId(sys.argv[1]))

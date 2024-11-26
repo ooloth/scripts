@@ -8,7 +8,7 @@ from rss.subscriptions.add.feedbin import CreateSubscriptionOutput, create_subsc
 
 
 def main(url: FeedUrl) -> CreateSubscriptionOutput:
-    log.debug(f"💪 Creating subscription for '{url.url}'")
+    log.debug(f"💪 Creating subscription for '{url}'")
 
     result = create_subscription(url)
 
@@ -25,9 +25,4 @@ if __name__ == "__main__":
         print("Usage: PYTHONPATH=. uv run rss/subscriptions/add/main.py <url>")
         sys.exit(1)
 
-    unvalidated_url = sys.argv[1]
-
-    log.debug(f"👀 Validating URL '{unvalidated_url}'")
-    validated_url = FeedUrl(url=unvalidated_url)
-
-    main(validated_url)
+    main(FeedUrl(sys.argv[1]))

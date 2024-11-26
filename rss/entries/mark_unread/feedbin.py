@@ -44,12 +44,11 @@ def create_unread_entries(entry_ids: list[EntryId]) -> CreateUnreadEntriesOutput
     Docs:
     - https://github.com/feedbin/feedbin-api/blob/master/content/unread-entries.md
     """
-    ids_as_ints = [id.id for id in entry_ids]
     marked_as_unread: set[int] = set()
     not_marked_as_unread: set[int] = set()
 
-    for i in range(0, len(ids_as_ints), MAX_ENTRIES_PER_BATCH):
-        batch = ids_as_ints[i : i + MAX_ENTRIES_PER_BATCH]
+    for i in range(0, len(entry_ids), MAX_ENTRIES_PER_BATCH):
+        batch = entry_ids[i : i + MAX_ENTRIES_PER_BATCH]
 
         request_args = RequestArgs(
             url=f"{API}/unread_entries.json",
@@ -73,6 +72,6 @@ def create_unread_entries(entry_ids: list[EntryId]) -> CreateUnreadEntriesOutput
             return CreateUnreadEntriesResult.UNEXPECTED_ERROR, str(e)
 
     return CreateUnreadEntriesResult.OK, UnreadEntriesResponse(
-        marked_as_unread=[EntryId(id=id) for id in marked_as_unread],
-        not_marked_as_unread=[EntryId(id=id) for id in not_marked_as_unread],
+        marked_as_unread=[EntryId(id) for id in marked_as_unread],
+        not_marked_as_unread=[EntryId(id) for id in not_marked_as_unread],
     )

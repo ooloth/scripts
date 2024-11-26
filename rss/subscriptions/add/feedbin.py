@@ -38,7 +38,7 @@ def create_subscription(url: FeedUrl) -> CreateSubscriptionOutput:
     - https://github.com/feedbin/feedbin-api/blob/master/content/subscriptions.md#create-subscription
     """
     try:
-        request_args = RequestArgs(url=f"{API}/subscriptions.json", json={"feed_url": url.url})
+        request_args = RequestArgs(url=f"{API}/subscriptions.json", json={"feed_url": url})
         response = make_request(HTTPMethod.POST, request_args)
 
         match response.status_code:

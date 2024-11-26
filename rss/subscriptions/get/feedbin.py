@@ -35,7 +35,7 @@ def get_subscription(subscription_id: SubscriptionId) -> GetSubscriptionOutput:
     Docs:
     - https://github.com/feedbin/feedbin-api/blob/master/content/subscriptions.md#get-subscription
     """
-    request_args = RequestArgs(url=f"{API}/subscriptions/{subscription_id.id}.json")
+    request_args = RequestArgs(url=f"{API}/subscriptions/{subscription_id}.json")
 
     try:
         response = make_request(HTTPMethod.GET, request_args)

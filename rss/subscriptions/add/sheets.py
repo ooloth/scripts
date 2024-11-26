@@ -33,7 +33,6 @@ from pydantic import BaseModel
 from rich.console import Console
 from rich.table import Table
 
-from common.cli import format_as_table
 from common.logs import log
 from rss.entities import EntryId, FeedId, FeedUrl, Subscription, SubscriptionId
 from rss.entries.list.feedbin import GetFeedEntriesResult
@@ -72,7 +71,7 @@ class Row(BaseModel):
     index: int
     details: str
     feed_id: FeedId | Literal[""]
-    status: Status | Literal[""]
+    status: Status
     subscription_id: SubscriptionId | Literal[""]
     url: FeedUrl
 
@@ -107,12 +106,10 @@ def get_rows(
         Row(
             index=i,
             details=str(row.get(details_col_name, "")),
-            feed_id=FeedId(id=cast(int, row.get(feed_id_col_name))) if row.get(feed_id_col_name) else "",
-            status=Status(row.get(status_col_name)) if row.get(status_col_name) else Status.NEW,
-            subscription_id=SubscriptionId(id=cast(int, row.get(subscription_id_col_name)))
-            if row.get(subscription_id_col_name)
-            else "",
-            url=FeedUrl(url=str(row.get(url_col_name, ""))),
+            feed_id=FeedId(row[feed_id_col_name]) if row.get(feed_id_col_name) else "",
+            status=Status(row[status_col_name]) if row.get(status_col_name) else Status.NEW,
+            subscription_id=SubscriptionId(row[subscription_id_col_name]) if row.get(subscription_id_col_name) else "",
+            url=FeedUrl(row[url_col_name] if row.get(url_col_name) else ""),
         )
         for i, row in enumerate(data, start=2)  # skip header row
     ]
@@ -203,23 +200,20 @@ def update_row(
     sheet: Worksheet,
 ) -> None:
     row_range = f"C{row_index}:F{row_index}"  # columns C to F of the row
-    row_values = [
-        [
-            row.status.value if isinstance(row.status, Status) else row.status,
-            row.subscription_id.id if isinstance(row.subscription_id, SubscriptionId) else row.subscription_id,
-            row.feed_id.id if isinstance(row.feed_id, FeedId) else row.feed_id,
-            str(row.details),
-        ]
-    ]
+    row_values = [[row.status.value, row.subscription_id, row.feed_id, str(row.details)]]
 
     sheet.update(row_values, row_range)
 
 
 def process_rows(rows: list[Row], sheet: Worksheet) -> list[Row]:
+    """TODO: make one bulk spreadsheet update at the end instead of defensively updating status throughout?"""
+    log.debug(f"🔍 rows: {rows}")
+
     updated_rows: list[Row] = []
 
     for row in rows:
         if row.status == Status.SUFFIX_ADDED:
+            log.debug(f"🔍 row: {row}")
             updated_rows.append(row)
             continue
 
@@ -241,7 +235,7 @@ def process_rows(rows: list[Row], sheet: Worksheet) -> list[Row]:
                 updated_rows.append(updated_row)
                 continue
 
-            entry_ids = [EntryId(id=entry.id) for entry in entries]
+            entry_ids = [EntryId(entry.id) for entry in entries]
             updated_row = mark_backlog_unread_and_return_updated_row(updated_row, entry_ids)
             log.debug(f"🔍 updated_row: {updated_row}")
             update_row(row=updated_row, row_index=updated_row.index, sheet=sheet)
@@ -258,17 +252,16 @@ def process_rows(rows: list[Row], sheet: Worksheet) -> list[Row]:
 
 def print_results(rows: list[Row]) -> None:
     table = Table(title="Results:", show_header=True, title_justify="left", title_style="bold cyan")
-    table.add_column(header="Row", style="cyan", no_wrap=True)
-    table.add_column(header="URL", style="cyan", no_wrap=True)
+    table.add_column(header="Row", style="magenta", no_wrap=True)
     table.add_column(header="Status", style="cyan", no_wrap=True)
-    table.add_column(header="Details", style="cyan", no_wrap=True)
-    # table.add_column(style="magenta")
+    table.add_column(header="URL", style="yellow", no_wrap=True)
+    table.add_column(header="Details", style="white", no_wrap=True)
 
     for idx, row in enumerate(rows, start=2):
         table.add_row(
             str(idx),
-            row.url.url,
             row.status.value if isinstance(row.status, Status) else "Unknown",
+            row.url,
             row.details,
         )
 

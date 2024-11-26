@@ -48,13 +48,13 @@ def get_feed_entries(
     - accept a site_url and look up the feed_id internally?
     """
     request_args = RequestArgs(
-        url=f"{API}/feeds/{feed_id.id}/entries.json",
+        url=f"{API}/feeds/{feed_id}/entries.json",
         params={"read": read, "starred": starred},
     )
 
     try:
         all_entries = make_paginated_request(request_args)
-        entries = [Entry(**entry) for entry in all_entries]
+        entries = [Entry(id=entry["id"]) for entry in all_entries]
         return GetFeedEntriesResult.OK, entries
     except HTTPError as e:
         match e.response.status_code:

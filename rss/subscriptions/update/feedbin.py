@@ -39,7 +39,7 @@ def update_subscription(
     - https://github.com/feedbin/feedbin-api/blob/master/content/subscriptions.md#update-subscription
     """
     request_args = RequestArgs(
-        url=f"{API}/subscriptions/{subscription_id.id}.json",
+        url=f"{API}/subscriptions/{subscription_id}.json",
         json={"title": new_title.title},
     )
 
