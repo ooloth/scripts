@@ -21,8 +21,8 @@ class CreateUnreadEntriesResult(Enum):
 
 @dataclass(frozen=True)
 class UnreadEntriesResponse:
-    marked_as_unread: set[EntryId]
-    not_marked_as_unread: set[EntryId]
+    marked_as_unread: list[EntryId]
+    not_marked_as_unread: list[EntryId]
 
 
 CreateUnreadEntriesOutput = (
@@ -63,8 +63,8 @@ def create_unread_entries(entry_ids: list[EntryId]) -> CreateUnreadEntriesOutput
                 case 200:
                     ids_marked_unread: set[int] = {int(id) for id in response.json()}  # TODO: validate?
                     ids_not_marked_unread: set[int] = set(batch) - set(ids_marked_unread)
-                    marked_as_unread.add(*ids_marked_unread)
-                    not_marked_as_unread.add(*ids_not_marked_unread)
+                    marked_as_unread.update(ids_marked_unread)
+                    not_marked_as_unread.update(ids_not_marked_unread)
                 case _:
                     return CreateUnreadEntriesResult.UNEXPECTED_STATUS_CODE, response.status_code
         except HTTPError as e:
@@ -73,6 +73,6 @@ def create_unread_entries(entry_ids: list[EntryId]) -> CreateUnreadEntriesOutput
             return CreateUnreadEntriesResult.UNEXPECTED_ERROR, str(e)
 
     return CreateUnreadEntriesResult.OK, UnreadEntriesResponse(
-        marked_as_unread={EntryId(id=id) for id in marked_as_unread},
-        not_marked_as_unread={EntryId(id=id) for id in not_marked_as_unread},
+        marked_as_unread=[EntryId(id=id) for id in marked_as_unread],
+        not_marked_as_unread=[EntryId(id=id) for id in not_marked_as_unread],
     )

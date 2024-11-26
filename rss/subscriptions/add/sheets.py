@@ -55,6 +55,7 @@ URL_COLUMN_NAME = "URL to subscribe to"
 
 
 class Status(Enum):
+    NEW = "New"
     ERROR = "Error"
     NOT_FOUND = "No Feed Found"
     MULTIPLE_CHOICES = "Multiple Feed URLs"
@@ -104,7 +105,7 @@ def get_rows(
             index=i,
             details=str(row.get(details_col_name, "")),
             feed_id=FeedId(id=cast(int, row.get(feed_id_col_name))) if row.get(feed_id_col_name) else "",
-            status=Status(row.get(status_col_name)) if row.get(status_col_name) else "",
+            status=Status(row.get(status_col_name)) if row.get(status_col_name) else Status.NEW,
             subscription_id=SubscriptionId(id=cast(int, row.get(subscription_id_col_name)))
             if row.get(subscription_id_col_name)
             else "",
@@ -211,48 +212,58 @@ def update_row(
     sheet.update(row_values, row_range)
 
 
+def process_rows(rows: list[Row], sheet: Worksheet) -> list[Row]:
+    updated_rows: list[Row] = []
+
+    for row in rows:
+        if row.status == Status.SUFFIX_ADDED:
+            updated_rows.append(row)
+            continue
+
+        updated_row = row
+
+        if row.status == Status.NEW:
+            updated_row = subscribe_and_return_updated_row(row)
+            update_row(row=updated_row, row_index=updated_row.index, sheet=sheet)
+            log.debug(f"🔍 updated_row: {updated_row}")
+
+        if updated_row.status == Status.SUBSCRIBED and isinstance(updated_row.feed_id, FeedId):
+            result, entries = get_feed_entries(feed_id=updated_row.feed_id)
+            if result != GetFeedEntriesResult.OK or not isinstance(entries, list):
+                msg = f"{result}: {entries}"
+                log.error(msg)
+                updated_row = updated_row.model_copy(update={"details": msg})
+                log.debug(f"🔍 updated_row: {updated_row}")
+                update_row(row=updated_row, row_index=updated_row.index, sheet=sheet)
+                updated_rows.append(updated_row)
+                continue
+
+            entry_ids = [EntryId(id=entry.id) for entry in entries]
+            updated_row = mark_backlog_unread_and_return_updated_row(updated_row, entry_ids)
+            log.debug(f"🔍 updated_row: {updated_row}")
+            update_row(row=updated_row, row_index=updated_row.index, sheet=sheet)
+
+        if updated_row.status == Status.BACKLOG_UNREAD and isinstance(updated_row.subscription_id, SubscriptionId):
+            updated_row = append_suffix_to_title_and_return_updated_row(updated_row)
+            log.debug(f"🔍 updated_row: {updated_row}")
+            update_row(row=updated_row, row_index=updated_row.index, sheet=sheet)
+
+        updated_rows.append(updated_row)
+
+    return updated_rows
+
+
 def main() -> None:
     """Subscribe to URLs saved in a Google Sheet and update the sheet with the result."""
     client = get_authenticated_sheets_client()
     sheet = get_worksheet(client)
     rows = get_rows(sheet)
-    log.debug(f"🔍 rows: {rows}")
 
-    # TODO: sort/separate by status first? append to next list when ready?
+    updated_rows = process_rows(rows, sheet)
+    log.debug(f"🔍 updated_rows: {updated_rows}")
+
     # TODO: call out multiple choices in terminal at end of run?
-
-    for row in rows:
-        if row.status == Status.SUFFIX_ADDED:
-            continue
-
-        if row.status not in {Status.SUBSCRIBED, Status.BACKLOG_UNREAD, Status.SUFFIX_ADDED}:
-            row_after_subscribing = subscribe_and_return_updated_row(row)
-            log.debug(f"🔍 row_after_subscribing: {row_after_subscribing}")
-            update_row(row=row_after_subscribing, row_index=row_after_subscribing.index, sheet=sheet)
-
-        if row.status not in {Status.BACKLOG_UNREAD, Status.SUFFIX_ADDED} and isinstance(
-            row_after_subscribing.feed_id, FeedId
-        ):
-            result, entries = get_feed_entries(feed_id=row_after_subscribing.feed_id)
-            if result != GetFeedEntriesResult.OK or not isinstance(entries, list):
-                log.error(f"Expected list of entries, got {entries}")
-                return
-
-            entry_ids = [EntryId(id=entry.id) for entry in entries]
-            row_after_marking_backlog_unread = mark_backlog_unread_and_return_updated_row(
-                row_after_subscribing, entry_ids
-            )
-            log.debug(f"🔍 row_after_marking_backlog_unread: {row_after_marking_backlog_unread}")
-            update_row(
-                row=row_after_marking_backlog_unread, row_index=row_after_marking_backlog_unread.index, sheet=sheet
-            )
-
-        if isinstance(row_after_subscribing.subscription_id, SubscriptionId):
-            row_after_appending_suffixes = append_suffix_to_title_and_return_updated_row(
-                row_after_marking_backlog_unread
-            )
-            log.debug(f"🔍 row_after_appending_suffixes: {row_after_appending_suffixes}")
-            update_row(row=row_after_appending_suffixes, row_index=row_after_appending_suffixes.index, sheet=sheet)
+    # TODO: run in github actions on a schedule?
 
 
 if __name__ == "__main__":

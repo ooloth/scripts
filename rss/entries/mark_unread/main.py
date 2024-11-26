@@ -8,7 +8,7 @@ from rss.entries.mark_unread.feedbin import CreateUnreadEntriesOutput, UnreadEnt
 
 
 def main(entry_ids: list[EntryId]) -> CreateUnreadEntriesOutput:
-    log.debug(f"💪 Marking {len(entry_ids)} as unread")
+    log.debug(f"💪 Marking {len(entry_ids)} entries as unread")
 
     result = create_unread_entries(entry_ids)
     outcome, data = result
