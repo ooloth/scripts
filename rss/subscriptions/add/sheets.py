@@ -30,7 +30,10 @@ from gspread.worksheet import Worksheet
 
 # from oauth2client.service_account import ServiceAccountCredentials
 from pydantic import BaseModel
+from rich.console import Console
+from rich.table import Table
 
+from common.cli import format_as_table
 from common.logs import log
 from rss.entities import EntryId, FeedId, FeedUrl, Subscription, SubscriptionId
 from rss.entries.list.feedbin import GetFeedEntriesResult
@@ -253,6 +256,26 @@ def process_rows(rows: list[Row], sheet: Worksheet) -> list[Row]:
     return updated_rows
 
 
+def print_results(rows: list[Row]) -> None:
+    table = Table(title="Results:", show_header=True, title_justify="left", title_style="bold cyan")
+    table.add_column(header="Row", style="cyan", no_wrap=True)
+    table.add_column(header="URL", style="cyan", no_wrap=True)
+    table.add_column(header="Status", style="cyan", no_wrap=True)
+    table.add_column(header="Details", style="cyan", no_wrap=True)
+    # table.add_column(style="magenta")
+
+    for idx, row in enumerate(rows, start=2):
+        table.add_row(
+            str(idx),
+            row.url.url,
+            row.status.value if isinstance(row.status, Status) else "Unknown",
+            row.details,
+        )
+
+    console = Console()
+    console.print(table)
+
+
 def main() -> None:
     """Subscribe to URLs saved in a Google Sheet and update the sheet with the result."""
     client = get_authenticated_sheets_client()
@@ -260,7 +283,7 @@ def main() -> None:
     rows = get_rows(sheet)
 
     updated_rows = process_rows(rows, sheet)
-    log.debug(f"🔍 updated_rows: {updated_rows}")
+    print_results(updated_rows)
 
     # TODO: call out multiple choices in terminal at end of run?
     # TODO: run in github actions on a schedule?
