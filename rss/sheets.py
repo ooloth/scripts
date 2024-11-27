@@ -201,7 +201,13 @@ def update_row(
 
 
 def process_rows(rows: list[Row], sheet: Worksheet) -> list[Row]:
-    """TODO: make one bulk spreadsheet update at the end instead of defensively updating status throughout?"""
+    """
+    TODO:
+    - Make less imperative and more functional
+    - Accumulate API calls and return them to be made in bulk later?
+    - Recursively call until all rows are in a terminal state?
+    - Make one bulk spreadsheet update at the end instead of defensively updating status throughout?
+    """
 
     updated_rows: list[Row] = []
 
@@ -244,7 +250,7 @@ def process_rows(rows: list[Row], sheet: Worksheet) -> list[Row]:
     return updated_rows
 
 
-def print_results(rows: list[Row]) -> None:
+def generate_results_table(rows: list[Row]) -> Table:
     table = Table(title="Results:", show_header=True, title_justify="left", title_style="bold cyan")
     table.add_column(header="Row", style="magenta", no_wrap=True)
     table.add_column(header="Status", style="cyan", no_wrap=True)
@@ -259,18 +265,23 @@ def print_results(rows: list[Row]) -> None:
             row.details,
         )
 
-    console = Console()
-    console.print(table)
+    return table
 
 
 def main() -> None:
     """Subscribe to URLs saved in a Google Sheet and update the sheet with the result."""
+    # I/O
     client = get_authenticated_sheets_client()
     sheet = get_worksheet(client)
     rows = get_rows(sheet)
 
+    # TODO: make pure + make the API calls in bulk later?
     updated_rows = process_rows(rows, sheet)
-    print_results(updated_rows)
+    table = generate_results_table(updated_rows)
+
+    # I/O
+    console = Console()
+    console.print(table)
 
 
 if __name__ == "__main__":
