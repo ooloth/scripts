@@ -5,7 +5,7 @@ on:
   workflow_dispatch: # allow manual triggering
 
 jobs:
-  modem-restart:
+  rss-subscribe:
     runs-on: ubuntu-latest
 
     steps:
