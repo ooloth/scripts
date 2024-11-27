@@ -23,7 +23,9 @@ def get_env(dry_run: str = "false") -> dict[str, str]:
 # TODO: delete? not currently used... maybe useful for feed choices?
 def format_as_table(items: list[str], title: str) -> Table:
     """Display the available script options as a table."""
-    table = Table(title=f"{title}:", show_header=False, title_justify="left", title_style="bold cyan")
+    table = Table(
+        title=f"{title}:", show_header=False, title_justify="left", title_style="bold cyan"
+    )
     table.add_column(justify="right", style="cyan", no_wrap=True)
     table.add_column(style="magenta")
 

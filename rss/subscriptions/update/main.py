@@ -3,7 +3,13 @@
 import sys
 
 from common.logs import log
-from rss.domain import Subscription, SubscriptionId, SubscriptionTitle, SubscriptionTitleWithSuffix, Url
+from rss.domain import (
+    Subscription,
+    SubscriptionId,
+    SubscriptionTitle,
+    SubscriptionTitleWithSuffix,
+    Url,
+)
 from rss.subscriptions.get.feedbin import get_subscription
 from rss.subscriptions.update.feedbin import update_subscription
 
@@ -37,7 +43,9 @@ def generate_new_title(subscription_id: SubscriptionId) -> SubscriptionTitleWith
     return append_suffix(subscription.title, subscription.site_url)
 
 
-def main(subscription_id: SubscriptionId, new_title: SubscriptionTitleWithSuffix | None = None) -> None:
+def main(
+    subscription_id: SubscriptionId, new_title: SubscriptionTitleWithSuffix | None = None
+) -> None:
     if new_title is None:
         log.debug("✍️ Generating new title")
         new_title = generate_new_title(subscription_id)
@@ -55,10 +63,14 @@ def main(subscription_id: SubscriptionId, new_title: SubscriptionTitleWithSuffix
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: PYTHONPATH=. uv run rss/subscriptions/update/main.py <subscription_id> <optional-new-title>")
+        print(
+            "Usage: PYTHONPATH=. uv run rss/subscriptions/update/main.py <subscription_id> <optional-new-title>"
+        )
         sys.exit(1)
 
     subscription_id = SubscriptionId(sys.argv[1])
-    optional_new_title = SubscriptionTitleWithSuffix(title=sys.argv[2]) if len(sys.argv) > 2 else None
+    optional_new_title = (
+        SubscriptionTitleWithSuffix(title=sys.argv[2]) if len(sys.argv) > 2 else None
+    )
 
     main(subscription_id, optional_new_title)

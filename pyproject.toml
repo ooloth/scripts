@@ -18,7 +18,7 @@
     "ruff>=0.7.1",
     "sendgrid>=6.11.0",
     "typer>=0.12.5",
-]
+  ]
 
 [dependency-groups]
   dev = ["types-requests>=2.32.0.20241016"]
@@ -27,7 +27,7 @@
   strict = true
 
 [tool.ruff]
-  line-length = 120
+  line-length = 100
 
   [tool.ruff.format]
     docstring-code-format = true

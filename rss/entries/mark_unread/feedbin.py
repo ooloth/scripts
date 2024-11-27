@@ -60,7 +60,7 @@ def create_unread_entries(entry_ids: list[EntryId]) -> CreateUnreadEntriesOutput
 
             match response.status_code:
                 case 200:
-                    ids_marked_unread: set[int] = {int(id) for id in response.json()}  # TODO: validate?
+                    ids_marked_unread: set[int] = {int(id) for id in response.json()}
                     ids_not_marked_unread: set[int] = set(batch) - set(ids_marked_unread)
                     marked_as_unread.update(ids_marked_unread)
                     not_marked_as_unread.update(ids_not_marked_unread)

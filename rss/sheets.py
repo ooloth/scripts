@@ -2,6 +2,7 @@
 Handler for bulk subscribing to URLs saved to a Google Sheet.
 
 TODO:
+- Get keyfile from 1Password?
 - Run in Github Actions on a schedule?
 
 SETUP:
@@ -43,7 +44,10 @@ from rss.subscriptions.update.feedbin import UpdateSubscriptionResult, update_su
 from rss.subscriptions.update.main import generate_new_title
 
 GOOGLE_CLOUD_CREDENTIALS_JSON = Path.cwd() / "rss/.secrets/google-cloud-service-account.json"
-GOOGLE_CLOUD_SCOPES = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+GOOGLE_CLOUD_SCOPES = [
+    "https://spreadsheets.google.com/feeds",
+    "https://www.googleapis.com/auth/drive",
+]
 SHEET_NAME = "RSS Feed Wish List 🔖"
 
 
@@ -79,7 +83,6 @@ def get_authenticated_sheets_client(
     credentials_json: Path = GOOGLE_CLOUD_CREDENTIALS_JSON,
     scopes: list[str] = GOOGLE_CLOUD_SCOPES,
 ) -> Client:
-    # TODO: get keyfile from 1Password?
     credentials = Credentials.from_service_account_file(credentials_json)  # type: ignore
     scoped_credentials = credentials.with_scopes(scopes)
     client = authorize(scoped_credentials)
@@ -107,7 +110,9 @@ def get_rows(
             details=str(row.get(details_col_name, "")),
             feed_id=FeedId(row[feed_id_col_name]) if row.get(feed_id_col_name) else "",
             status=Status(row[status_col_name]) if row.get(status_col_name) else Status.NEW,
-            subscription_id=SubscriptionId(row[subscription_id_col_name]) if row.get(subscription_id_col_name) else "",
+            subscription_id=SubscriptionId(row[subscription_id_col_name])
+            if row.get(subscription_id_col_name)
+            else "",
             url=FeedUrl(row[url_col_name] if row.get(url_col_name) else ""),
         )
         for i, row in enumerate(data, start=2)  # skip header row
@@ -132,33 +137,60 @@ def subscribe_and_return_updated_row(row: Row) -> Row:
                 }
             )
         case CreateSubscriptionResult.MULTIPLE_CHOICES:
-            return row.model_copy(update={"status": Status.MULTIPLE_CHOICES, "details": data})
+            return row.model_copy(
+                update={
+                    "status": Status.MULTIPLE_CHOICES,
+                    "details": data,
+                }
+            )
         case CreateSubscriptionResult.NOT_FOUND:
-            return row.model_copy(update={"status": Status.NOT_FOUND, "details": f"{result}: {data}"})
+            return row.model_copy(
+                update={
+                    "status": Status.NOT_FOUND,
+                    "details": f"{result}: {data}",
+                }
+            )
         case (
             CreateSubscriptionResult.HTTP_ERROR
             | CreateSubscriptionResult.UNEXPECTED_ERROR
             | CreateSubscriptionResult.UNEXPECTED_STATUS_CODE
         ):
-            return row.model_copy(update={"status": Status.ERROR, "details": f"{result}: {data}"})
+            return row.model_copy(
+                update={
+                    "status": Status.ERROR,
+                    "details": f"{result}: {data}",
+                }
+            )
 
 
 def mark_backlog_unread_and_return_updated_row(row: Row, entry_ids: list[EntryId]) -> Row:
     """Mark subscription's entire backlog as unread and return the updated row."""
-    if row.status in {Status.BACKLOG_UNREAD, Status.SUFFIX_ADDED} or not isinstance(entry_ids, list):
+    if row.status in {Status.BACKLOG_UNREAD, Status.SUFFIX_ADDED} or not isinstance(
+        entry_ids, list
+    ):
         return row
 
     result, data = create_unread_entries(entry_ids)
 
     match result:
         case CreateUnreadEntriesResult.OK:
-            return row.model_copy(update={"status": Status.BACKLOG_UNREAD, "details": ""})
+            return row.model_copy(
+                update={
+                    "status": Status.BACKLOG_UNREAD,
+                    "details": "",
+                }
+            )
         case (
             CreateUnreadEntriesResult.HTTP_ERROR
             | CreateUnreadEntriesResult.UNEXPECTED_ERROR
             | CreateUnreadEntriesResult.UNEXPECTED_STATUS_CODE
         ):
-            return row.model_copy(update={"status": Status.ERROR, "details": f"{result}: {data}"})
+            return row.model_copy(
+                update={
+                    "status": Status.ERROR,
+                    "details": f"{result}: {data}",
+                }
+            )
 
 
 def append_suffix_to_title_and_return_updated_row(row: Row) -> Row:
@@ -168,23 +200,38 @@ def append_suffix_to_title_and_return_updated_row(row: Row) -> Row:
 
     new_title = generate_new_title(row.subscription_id)
     if new_title is None:
-        return row.model_copy(update={"status": Status.ERROR, "details": "Failed to generate new title"})
+        return row.model_copy(
+            update={"status": Status.ERROR, "details": "Failed to generate new title"}
+        )
 
     result, data = update_subscription(subscription_id=row.subscription_id, new_title=new_title)
 
     match result:
         case UpdateSubscriptionResult.OK:
             return row.model_copy(
-                update={"status": Status.SUFFIX_ADDED, "details": data.title if isinstance(data, Subscription) else ""}
+                update={
+                    "status": Status.SUFFIX_ADDED,
+                    "details": data.title if isinstance(data, Subscription) else data,
+                }
             )
         case UpdateSubscriptionResult.FORBIDDEN | UpdateSubscriptionResult.NOT_FOUND:
-            return row.model_copy(update={"status": Status.NOT_FOUND, "details": f"{result}: {data}"})
+            return row.model_copy(
+                update={
+                    "status": Status.NOT_FOUND,
+                    "details": f"{result}: {data}",
+                }
+            )
         case (
             UpdateSubscriptionResult.UNEXPECTED_STATUS_CODE
             | UpdateSubscriptionResult.HTTP_ERROR
             | UpdateSubscriptionResult.UNEXPECTED_ERROR
         ):
-            return row.model_copy(update={"status": Status.ERROR, "details": f"{result}: {data}"})
+            return row.model_copy(
+                update={
+                    "status": Status.ERROR,
+                    "details": f"{result}: {data}",
+                }
+            )
 
 
 # TODO: return what happened
@@ -209,45 +256,47 @@ def process_rows(rows: list[Row], sheet: Worksheet) -> list[Row]:
     - Make one bulk spreadsheet update at the end instead of defensively updating status throughout?
     """
 
-    updated_rows: list[Row] = []
+    processed_rows: list[Row] = []
 
     for row in rows:
         if row.status == Status.SUFFIX_ADDED:
             log.debug(f"🔍 already processed: {row.url}")
-            updated_rows.append(row)
+            processed_rows.append(row)
             continue
 
-        updated_row = row
+        processed_row = row
 
         if row.status == Status.NEW:
-            updated_row = subscribe_and_return_updated_row(row)
-            update_row(row=updated_row, row_index=updated_row.index, sheet=sheet)
-            log.debug(f"🔍 updated_row: {updated_row}")
+            processed_row = subscribe_and_return_updated_row(row)
+            update_row(row=processed_row, row_index=processed_row.index, sheet=sheet)
+            log.debug(f"🔍 updated_row: {processed_row}")
 
-        if updated_row.status == Status.SUBSCRIBED and isinstance(updated_row.feed_id, FeedId):
-            result, entries = get_feed_entries(feed_id=updated_row.feed_id)
+        if processed_row.status == Status.SUBSCRIBED and isinstance(processed_row.feed_id, FeedId):
+            result, entries = get_feed_entries(feed_id=processed_row.feed_id)
             if result != GetFeedEntriesResult.OK or not isinstance(entries, list):
                 msg = f"{result}: {entries}"
                 log.error(msg)
-                updated_row = updated_row.model_copy(update={"details": msg})
-                log.debug(f"🔍 updated_row: {updated_row}")
-                update_row(row=updated_row, row_index=updated_row.index, sheet=sheet)
-                updated_rows.append(updated_row)
+                processed_row = processed_row.model_copy(update={"details": msg})
+                log.debug(f"🔍 updated_row: {processed_row}")
+                update_row(row=processed_row, row_index=processed_row.index, sheet=sheet)
+                processed_rows.append(processed_row)
                 continue
 
             entry_ids = [EntryId(entry.id) for entry in entries]
-            updated_row = mark_backlog_unread_and_return_updated_row(updated_row, entry_ids)
-            log.debug(f"🔍 updated_row: {updated_row}")
-            update_row(row=updated_row, row_index=updated_row.index, sheet=sheet)
+            processed_row = mark_backlog_unread_and_return_updated_row(processed_row, entry_ids)
+            log.debug(f"🔍 updated_row: {processed_row}")
+            update_row(row=processed_row, row_index=processed_row.index, sheet=sheet)
 
-        if updated_row.status == Status.BACKLOG_UNREAD and isinstance(updated_row.subscription_id, SubscriptionId):
-            updated_row = append_suffix_to_title_and_return_updated_row(updated_row)
-            log.debug(f"🔍 updated_row: {updated_row}")
-            update_row(row=updated_row, row_index=updated_row.index, sheet=sheet)
+        if processed_row.status == Status.BACKLOG_UNREAD and isinstance(
+            processed_row.subscription_id, SubscriptionId
+        ):
+            processed_row = append_suffix_to_title_and_return_updated_row(processed_row)
+            log.debug(f"🔍 updated_row: {processed_row}")
+            update_row(row=processed_row, row_index=processed_row.index, sheet=sheet)
 
-        updated_rows.append(updated_row)
+        processed_rows.append(processed_row)
 
-    return updated_rows
+    return processed_rows
 
 
 def generate_results_table(rows: list[Row]) -> Table:
