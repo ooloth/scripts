@@ -1,6 +1,9 @@
 """
 Handler for bulk subscribing to URLs saved to a Google Sheet.
 
+TODO:
+- Run in Github Actions on a schedule?
+
 SETUP:
 
 Step 1: Set Up Google Cloud Project
@@ -27,32 +30,32 @@ from google.oauth2.service_account import Credentials
 from gspread.auth import authorize
 from gspread.client import Client
 from gspread.worksheet import Worksheet
-
-# from oauth2client.service_account import ServiceAccountCredentials
 from pydantic import BaseModel
 from rich.console import Console
 from rich.table import Table
 
 from common.logs import log
-from rss.entities import EntryId, FeedId, FeedUrl, Subscription, SubscriptionId
+from rss.domain import EntryId, FeedId, FeedUrl, Subscription, SubscriptionId
 from rss.entries.list.feedbin import GetFeedEntriesResult, get_feed_entries
 from rss.entries.mark_unread.feedbin import CreateUnreadEntriesResult, create_unread_entries
 from rss.subscriptions.add.feedbin import CreateSubscriptionResult, create_subscription
 from rss.subscriptions.update.feedbin import UpdateSubscriptionResult, update_subscription
 from rss.subscriptions.update.main import generate_new_title
 
-GOOGLE_CLOUD_CREDENTIALS_JSON = Path.cwd() / "rss/subscriptions/add/.secrets/google-cloud-service-account.json"
+GOOGLE_CLOUD_CREDENTIALS_JSON = Path.cwd() / "rss/.secrets/google-cloud-service-account.json"
 GOOGLE_CLOUD_SCOPES = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-
 SHEET_NAME = "RSS Feed Wish List 🔖"
-DETAILS_COLUMN_NAME = "Details"
-FEED_ID_COLUMN_NAME = "Feed ID"
-STATUS_COLUMN_NAME = "Status"
-SUBSCRIPTION_ID_COLUMN_NAME = "Subscription ID"
-URL_COLUMN_NAME = "URL to subscribe to"
 
 
-class Status(Enum):
+class ColumnName(str, Enum):
+    DETAILS = "Details"
+    FEED_ID = "Feed ID"
+    STATUS = "Status"
+    SUBSCRIPTION_ID = "Subscription ID"
+    URL = "URL to subscribe to"
+
+
+class Status(str, Enum):
     NEW = "New"
     ERROR = "Error"
     NOT_FOUND = "No Feed Found"
@@ -90,11 +93,11 @@ def get_worksheet(client: Client, sheet_name: str = SHEET_NAME) -> Worksheet:
 def get_rows(
     sheet: Worksheet,
     *,
-    details_col_name: str = DETAILS_COLUMN_NAME,
-    feed_id_col_name: str = FEED_ID_COLUMN_NAME,
-    status_col_name: str = STATUS_COLUMN_NAME,
-    subscription_id_col_name: str = SUBSCRIPTION_ID_COLUMN_NAME,
-    url_col_name: str = URL_COLUMN_NAME,
+    details_col_name: ColumnName = ColumnName.DETAILS,
+    feed_id_col_name: ColumnName = ColumnName.FEED_ID,
+    status_col_name: ColumnName = ColumnName.STATUS,
+    subscription_id_col_name: ColumnName = ColumnName.SUBSCRIPTION_ID,
+    url_col_name: ColumnName = ColumnName.URL,
 ) -> list[Row]:
     data = sheet.get_all_records()
 
@@ -268,9 +271,6 @@ def main() -> None:
 
     updated_rows = process_rows(rows, sheet)
     print_results(updated_rows)
-
-    # TODO: call out multiple choices in terminal at end of run?
-    # TODO: run in github actions on a schedule?
 
 
 if __name__ == "__main__":
