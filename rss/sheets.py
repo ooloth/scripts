@@ -85,7 +85,6 @@ def get_authenticated_sheets_client(
     service_account_info: JsonParsed,
     scopes: list[str],
 ) -> Client:
-    log.debug(f"🔍 service_account_info: {service_account_info}")
     credentials = Credentials.from_service_account_info(service_account_info)  # type: ignore
     scoped_credentials = credentials.with_scopes(scopes)
     client = authorize(scoped_credentials)
@@ -284,7 +283,7 @@ def generate_results_table(rows: list[Row]) -> Table:
             str(i),
             row.status.value if isinstance(row.status, Status) else "Unknown",
             row.url,
-            row.details,
+            str(row.details),
         )
 
     return table
