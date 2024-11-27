@@ -9,7 +9,7 @@ from rss.domain import Subscription, SubscriptionId, SubscriptionTitleWithSuffix
 from rss.utils.feedbin import API, HTTPMethod, RequestArgs, make_request
 
 
-class UpdateSubscriptionResult(Enum):
+class UpdateSubscriptionResult(str, Enum):
     OK = "✅ Subscription title updated"
     FORBIDDEN = "⛔️ You do not own this Feedbin subscription"
     NOT_FOUND = "⛔️ No Feedbin subscription found with that ID"

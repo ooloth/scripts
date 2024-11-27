@@ -28,7 +28,7 @@ def _get_auth() -> tuple[str, str]:
     return _auth
 
 
-class HTTPMethod(Enum):
+class HTTPMethod(str, Enum):
     GET = "GET"
     PATCH = "PATCH"
     POST = "POST"

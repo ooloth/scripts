@@ -9,7 +9,7 @@ from rss.domain import Subscription, SubscriptionId
 from rss.utils.feedbin import API, HTTPMethod, RequestArgs, make_request
 
 
-class GetSubscriptionResult(Enum):
+class GetSubscriptionResult(str, Enum):
     OK = "✅ Subscription found"
     FORBIDDEN = "⛔️ You do not own this Feedbin subscription"
     NOT_FOUND = "⛔️ No Feedbin subscription found with that ID"

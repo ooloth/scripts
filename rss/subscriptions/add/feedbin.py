@@ -9,7 +9,7 @@ from rss.domain import FeedOption, FeedUrl, Subscription
 from rss.utils.feedbin import API, HTTPMethod, RequestArgs, make_request
 
 
-class CreateSubscriptionResult(Enum):
+class CreateSubscriptionResult(str, Enum):
     CREATED = "✅ Subscription created"
     EXISTS = "✅ Subscription already exists"
     MULTIPLE_CHOICES = "🥞 Multiple RSS feeds found"

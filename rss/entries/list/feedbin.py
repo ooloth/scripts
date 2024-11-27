@@ -9,7 +9,7 @@ from rss.domain import Entry, FeedId
 from rss.utils.feedbin import API, RequestArgs, make_paginated_request
 
 
-class GetFeedEntriesResult(Enum):
+class GetFeedEntriesResult(str, Enum):
     OK = "✅ Feed entries found"
     FORBIDDEN = "⛔️ You are not subscribed to this feed"
     NOT_FOUND = "⛔️ No feed found with that ID"

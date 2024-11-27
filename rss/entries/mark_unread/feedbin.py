@@ -12,7 +12,7 @@ from rss.utils.feedbin import API, HTTPMethod, RequestArgs, make_request
 MAX_ENTRIES_PER_BATCH = 1000
 
 
-class CreateUnreadEntriesResult(Enum):
+class CreateUnreadEntriesResult(str, Enum):
     OK = "✅ Entries marked as unread"
     UNEXPECTED_STATUS_CODE = "🚨 Unexpected status code while marking entries as unread"
     HTTP_ERROR = "🚨 HTTP error while marking entries as unread"

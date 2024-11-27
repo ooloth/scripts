@@ -14,7 +14,7 @@ from rss.utils.feedbin import (
 )
 
 
-class DeleteSubscriptionResult(Enum):
+class DeleteSubscriptionResult(str, Enum):
     NO_CONTENT = "✅ Subscription deleted"
     FORBIDDEN = "⛔️ You do not own this Feedbin subscription ID"
     NOT_FOUND = "⛔️ No Feedbin subscription found with that ID"
