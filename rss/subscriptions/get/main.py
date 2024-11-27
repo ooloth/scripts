@@ -12,18 +12,6 @@ from rss.entities import SubscriptionId
 from rss.subscriptions.get.feedbin import get_subscription
 
 
-def get_suffix(site_url: str) -> str:
-    """Returns 📺 for YouTube URLs; otherwise, returns 📖."""
-    if "youtube.com" in site_url or "youtu.be" in site_url:
-        return "📺"
-    return "📖"
-
-
-def get_title_with_suffix(title: str, site_url: str) -> str:
-    suffix = get_suffix(site_url)
-    return f"{title} {suffix}"
-
-
 def main(subscription_id: SubscriptionId) -> None:
     log.debug(f"💪 Getting subscription {subscription_id}")
 

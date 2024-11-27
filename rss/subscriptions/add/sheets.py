@@ -35,15 +35,11 @@ from rich.table import Table
 
 from common.logs import log
 from rss.entities import EntryId, FeedId, FeedUrl, Subscription, SubscriptionId
-from rss.entries.list.feedbin import GetFeedEntriesResult
-from rss.entries.list.main import main as get_feed_entries
-from rss.entries.mark_unread.feedbin import CreateUnreadEntriesResult
-from rss.entries.mark_unread.main import main as mark_entries_unread
-from rss.subscriptions.add.feedbin import CreateSubscriptionResult
-from rss.subscriptions.add.main import main as add_subscription
-from rss.subscriptions.get.feedbin import GetSubscriptionResult
-from rss.subscriptions.update.feedbin import UpdateSubscriptionResult
-from rss.subscriptions.update.main import main as update_subscription
+from rss.entries.list.feedbin import GetFeedEntriesResult, get_feed_entries
+from rss.entries.mark_unread.feedbin import CreateUnreadEntriesResult, create_unread_entries
+from rss.subscriptions.add.feedbin import CreateSubscriptionResult, create_subscription
+from rss.subscriptions.update.feedbin import UpdateSubscriptionResult, update_subscription
+from rss.subscriptions.update.main import generate_new_title
 
 GOOGLE_CLOUD_CREDENTIALS_JSON = Path.cwd() / "rss/subscriptions/add/.secrets/google-cloud-service-account.json"
 GOOGLE_CLOUD_SCOPES = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -120,7 +116,7 @@ def subscribe_and_return_updated_row(row: Row) -> Row:
     if row.status in {Status.SUBSCRIBED, Status.BACKLOG_UNREAD, Status.SUFFIX_ADDED}:
         return row
 
-    result, data = add_subscription(url=row.url)
+    result, data = create_subscription(url=row.url)
 
     match result:
         case CreateSubscriptionResult.CREATED | CreateSubscriptionResult.EXISTS:
@@ -149,7 +145,7 @@ def mark_backlog_unread_and_return_updated_row(row: Row, entry_ids: list[EntryId
     if row.status in {Status.BACKLOG_UNREAD, Status.SUFFIX_ADDED} or not isinstance(entry_ids, list):
         return row
 
-    result, data = mark_entries_unread(entry_ids)
+    result, data = create_unread_entries(entry_ids)
 
     match result:
         case CreateUnreadEntriesResult.OK:
@@ -167,26 +163,22 @@ def append_suffix_to_title_and_return_updated_row(row: Row) -> Row:
     if row.status == Status.SUFFIX_ADDED or not isinstance(row.subscription_id, SubscriptionId):
         return row
 
-    result, data = update_subscription(subscription_id=row.subscription_id)
+    new_title = generate_new_title(row.subscription_id)
+    if new_title is None:
+        return row.model_copy(update={"status": Status.ERROR, "details": "Failed to generate new title"})
+
+    result, data = update_subscription(subscription_id=row.subscription_id, new_title=new_title)
 
     match result:
-        case GetSubscriptionResult.OK | UpdateSubscriptionResult.OK:
+        case UpdateSubscriptionResult.OK:
             return row.model_copy(
                 update={"status": Status.SUFFIX_ADDED, "details": data.title if isinstance(data, Subscription) else ""}
             )
-        case (
-            GetSubscriptionResult.FORBIDDEN
-            | UpdateSubscriptionResult.FORBIDDEN
-            | GetSubscriptionResult.NOT_FOUND
-            | UpdateSubscriptionResult.NOT_FOUND
-        ):
+        case UpdateSubscriptionResult.FORBIDDEN | UpdateSubscriptionResult.NOT_FOUND:
             return row.model_copy(update={"status": Status.NOT_FOUND, "details": f"{result}: {data}"})
         case (
-            GetSubscriptionResult.UNEXPECTED_STATUS_CODE
-            | UpdateSubscriptionResult.UNEXPECTED_STATUS_CODE
-            | GetSubscriptionResult.HTTP_ERROR
+            UpdateSubscriptionResult.UNEXPECTED_STATUS_CODE
             | UpdateSubscriptionResult.HTTP_ERROR
-            | GetSubscriptionResult.UNEXPECTED_ERROR
             | UpdateSubscriptionResult.UNEXPECTED_ERROR
         ):
             return row.model_copy(update={"status": Status.ERROR, "details": f"{result}: {data}"})
@@ -207,13 +199,12 @@ def update_row(
 
 def process_rows(rows: list[Row], sheet: Worksheet) -> list[Row]:
     """TODO: make one bulk spreadsheet update at the end instead of defensively updating status throughout?"""
-    log.debug(f"🔍 rows: {rows}")
 
     updated_rows: list[Row] = []
 
     for row in rows:
         if row.status == Status.SUFFIX_ADDED:
-            log.debug(f"🔍 row: {row}")
+            log.debug(f"🔍 already processed: {row.url}")
             updated_rows.append(row)
             continue
 

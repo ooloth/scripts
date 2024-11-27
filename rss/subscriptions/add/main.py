@@ -4,20 +4,16 @@ import sys
 
 from common.logs import log
 from rss.entities import FeedUrl
-from rss.subscriptions.add.feedbin import CreateSubscriptionOutput, create_subscription
+from rss.subscriptions.add.feedbin import create_subscription
 
 
-def main(url: FeedUrl) -> CreateSubscriptionOutput:
+def main(url: FeedUrl) -> None:
     log.debug(f"💪 Creating subscription for '{url}'")
 
-    result = create_subscription(url)
-
-    outcome, data = result
-    log.debug(f"{outcome.value}: {data}")
+    result, data = create_subscription(url)
+    log.debug(f"{result.value}: {data}")
 
     log.debug("👍 Done adding subscription")
-
-    return result
 
 
 if __name__ == "__main__":
@@ -25,4 +21,4 @@ if __name__ == "__main__":
         print("Usage: PYTHONPATH=. uv run rss/subscriptions/add/main.py <url>")
         sys.exit(1)
 
-    main(FeedUrl(sys.argv[1]))
+    main(FeedUrl(sys.argv[1]))  # use pydantic core's Url here for validation?
