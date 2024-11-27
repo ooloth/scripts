@@ -24,6 +24,7 @@ Step 3: Share Google Sheet
 
 import json
 from enum import Enum
+from itertools import groupby
 from typing import Literal
 
 from google.oauth2.service_account import Credentials
@@ -36,6 +37,7 @@ from rich.table import Table
 
 from common.logs import log
 from common.secrets import get_secret
+from common.sendgrid import send_email
 from rss.domain import EntryId, FeedId, FeedUrl, Subscription, SubscriptionId
 from rss.entries.list.feedbin import GetFeedEntriesResult, get_feed_entries
 from rss.entries.mark_unread.feedbin import CreateUnreadEntriesResult, create_unread_entries
@@ -66,7 +68,6 @@ class Status(str, Enum):
     SUBSCRIBED = "Subscribed"
     BACKLOG_UNREAD = "Backlog Marked Unread"
     SUFFIX_ADDED = "Suffix Added"
-    TAG_ADDED = "Tag Added"
 
 
 class Row(BaseModel):
@@ -271,6 +272,34 @@ def process_rows(rows: list[Row], sheet: Worksheet) -> list[Row]:
     return processed_rows
 
 
+def generate_results_email(original_rows: list[Row], updated_rows: list[Row]) -> tuple[str, str]:
+    """Generate the email subject and HTML body for the results."""
+    subject = "✅ RSS Feed Wish List Updated"
+
+    def group_rows_by_status(rows: list[Row]) -> dict[str, list[Row]]:
+        """Sort rows by status, then group by status."""
+        rows.sort(key=lambda row: row.status.value)
+        grouped_rows = {
+            status: list(items) for status, items in groupby(rows, key=lambda row: row.status.value)
+        }
+        return grouped_rows
+
+    def generate_html(grouped_rows: dict[str, list[Row]]) -> str:
+        """Output the URLs in the sheet, grouped by their status, sorted by the Status enum field order."""
+        status_order = {status.value: index for index, status in enumerate(Status)}
+        sorted_grouped_rows = sorted(grouped_rows.items(), key=lambda item: status_order[item[0]])
+        html_fragments = [
+            f"<h3>{status}</h3><ul>{''.join(f'<li>{row.url}</li>' for row in rows)}</ul>"
+            for status, rows in sorted_grouped_rows
+        ]
+        return "".join(html_fragments)
+
+    rows_by_status = group_rows_by_status(updated_rows)
+    html = generate_html(rows_by_status)
+
+    return subject, html
+
+
 def generate_results_table(rows: list[Row]) -> Table:
     table = Table(title="Results:", show_header=True, title_justify="left", title_style="bold cyan")
     table.add_column(header="Row", style="magenta", no_wrap=True)
@@ -302,9 +331,11 @@ def main() -> None:
 
     # TODO: make pure + make the API calls in bulk later?
     updated_rows = process_rows(rows, sheet)
+    subject, html = generate_results_email(rows, updated_rows)
     table = generate_results_table(updated_rows)
 
     # I/O
+    send_email(subject, html)
     console = Console()
     console.print(table)
 
