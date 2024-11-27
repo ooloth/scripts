@@ -90,6 +90,7 @@ def get_authenticated_sheets_client(
 
 
 def get_worksheet(client: Client, sheet_name: str = SHEET_NAME) -> Worksheet:
+    """Get the form responses worksheet from the Google Sheet."""
     return client.open(sheet_name).sheet1
 
 
@@ -102,6 +103,7 @@ def get_rows(
     subscription_id_col_name: ColumnName = ColumnName.SUBSCRIPTION_ID,
     url_col_name: ColumnName = ColumnName.URL,
 ) -> list[Row]:
+    """Get the parsed rows from the Google Sheet."""
     data = sheet.get_all_records()
 
     return [
@@ -137,30 +139,17 @@ def subscribe_and_return_updated_row(row: Row) -> Row:
                 }
             )
         case CreateSubscriptionResult.MULTIPLE_CHOICES:
-            return row.model_copy(
-                update={
-                    "status": Status.MULTIPLE_CHOICES,
-                    "details": data,
-                }
-            )
+            return row.model_copy(update={"status": Status.MULTIPLE_CHOICES, "details": data})
         case CreateSubscriptionResult.NOT_FOUND:
             return row.model_copy(
-                update={
-                    "status": Status.NOT_FOUND,
-                    "details": f"{result}: {data}",
-                }
+                update={"status": Status.NOT_FOUND, "details": f"{result}: {data}"}
             )
         case (
             CreateSubscriptionResult.HTTP_ERROR
             | CreateSubscriptionResult.UNEXPECTED_ERROR
             | CreateSubscriptionResult.UNEXPECTED_STATUS_CODE
         ):
-            return row.model_copy(
-                update={
-                    "status": Status.ERROR,
-                    "details": f"{result}: {data}",
-                }
-            )
+            return row.model_copy(update={"status": Status.ERROR, "details": f"{result}: {data}"})
 
 
 def mark_backlog_unread_and_return_updated_row(row: Row, entry_ids: list[EntryId]) -> Row:
@@ -174,23 +163,13 @@ def mark_backlog_unread_and_return_updated_row(row: Row, entry_ids: list[EntryId
 
     match result:
         case CreateUnreadEntriesResult.OK:
-            return row.model_copy(
-                update={
-                    "status": Status.BACKLOG_UNREAD,
-                    "details": "",
-                }
-            )
+            return row.model_copy(update={"status": Status.BACKLOG_UNREAD, "details": ""})
         case (
             CreateUnreadEntriesResult.HTTP_ERROR
             | CreateUnreadEntriesResult.UNEXPECTED_ERROR
             | CreateUnreadEntriesResult.UNEXPECTED_STATUS_CODE
         ):
-            return row.model_copy(
-                update={
-                    "status": Status.ERROR,
-                    "details": f"{result}: {data}",
-                }
-            )
+            return row.model_copy(update={"status": Status.ERROR, "details": f"{result}: {data}"})
 
 
 def append_suffix_to_title_and_return_updated_row(row: Row) -> Row:
@@ -216,22 +195,14 @@ def append_suffix_to_title_and_return_updated_row(row: Row) -> Row:
             )
         case UpdateSubscriptionResult.FORBIDDEN | UpdateSubscriptionResult.NOT_FOUND:
             return row.model_copy(
-                update={
-                    "status": Status.NOT_FOUND,
-                    "details": f"{result}: {data}",
-                }
+                update={"status": Status.NOT_FOUND, "details": f"{result}: {data}"}
             )
         case (
             UpdateSubscriptionResult.UNEXPECTED_STATUS_CODE
             | UpdateSubscriptionResult.HTTP_ERROR
             | UpdateSubscriptionResult.UNEXPECTED_ERROR
         ):
-            return row.model_copy(
-                update={
-                    "status": Status.ERROR,
-                    "details": f"{result}: {data}",
-                }
-            )
+            return row.model_copy(update={"status": Status.ERROR, "details": f"{result}: {data}"})
 
 
 # TODO: return what happened
@@ -241,6 +212,7 @@ def update_row(
     row_index: int,
     sheet: Worksheet,
 ) -> None:
+    """Update the row in the Google Sheet."""
     row_range = f"C{row_index}:F{row_index}"  # columns C to F of the row
     row_values = [[row.status.value, row.subscription_id, row.feed_id, str(row.details)]]
 
