@@ -34,7 +34,10 @@ def build_secret_reference(item: str, field: str) -> str:
     return f"op://{VAULT}/{item}/{field}"
 
 
-def get_secret(item: str, field: str) -> str:
+PasswordOrStringifiedJson = str
+
+
+def get_secret(item: str, field: str) -> PasswordOrStringifiedJson:
     """
     Generate a 1Password secret reference and retrieve the secret's value.
     """

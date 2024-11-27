@@ -2,7 +2,6 @@
 Handler for bulk subscribing to URLs saved to a Google Sheet.
 
 TODO:
-- Get keyfile from 1Password?
 - Run in Github Actions on a schedule?
 
 SETUP:
@@ -23,8 +22,8 @@ Step 3: Share Google Sheet
 - Share the sheet with the service account email (found in the JSON key file).
 """
 
+import json
 from enum import Enum
-from pathlib import Path
 from typing import Literal
 
 from google.oauth2.service_account import Credentials
@@ -36,6 +35,7 @@ from rich.console import Console
 from rich.table import Table
 
 from common.logs import log
+from common.secrets import get_secret
 from rss.domain import EntryId, FeedId, FeedUrl, Subscription, SubscriptionId
 from rss.entries.list.feedbin import GetFeedEntriesResult, get_feed_entries
 from rss.entries.mark_unread.feedbin import CreateUnreadEntriesResult, create_unread_entries
@@ -43,7 +43,6 @@ from rss.subscriptions.add.feedbin import CreateSubscriptionResult, create_subsc
 from rss.subscriptions.update.feedbin import UpdateSubscriptionResult, update_subscription
 from rss.subscriptions.update.main import generate_new_title
 
-GOOGLE_CLOUD_CREDENTIALS_JSON = Path.cwd() / "rss/.secrets/google-cloud-service-account.json"
 GOOGLE_CLOUD_SCOPES = [
     "https://spreadsheets.google.com/feeds",
     "https://www.googleapis.com/auth/drive",
@@ -79,11 +78,15 @@ class Row(BaseModel):
     url: FeedUrl
 
 
+JsonParsed = dict[str, str]
+
+
 def get_authenticated_sheets_client(
-    credentials_json: Path = GOOGLE_CLOUD_CREDENTIALS_JSON,
-    scopes: list[str] = GOOGLE_CLOUD_SCOPES,
+    service_account_info: JsonParsed,
+    scopes: list[str],
 ) -> Client:
-    credentials = Credentials.from_service_account_file(credentials_json)  # type: ignore
+    log.debug(f"🔍 service_account_info: {service_account_info}")
+    credentials = Credentials.from_service_account_info(service_account_info)  # type: ignore
     scoped_credentials = credentials.with_scopes(scopes)
     client = authorize(scoped_credentials)
     return client
@@ -246,9 +249,7 @@ def process_rows(rows: list[Row], sheet: Worksheet) -> list[Row]:
         if processed_row.status == Status.SUBSCRIBED and isinstance(processed_row.feed_id, FeedId):
             result, entries = get_feed_entries(feed_id=processed_row.feed_id)
             if result != GetFeedEntriesResult.OK or not isinstance(entries, list):
-                msg = f"{result}: {entries}"
-                log.error(msg)
-                processed_row = processed_row.model_copy(update={"details": msg})
+                processed_row = processed_row.model_copy(update={"details": f"{result}: {entries}"})
                 log.debug(f"🔍 updated_row: {processed_row}")
                 update_row(row=processed_row, row_index=processed_row.index, sheet=sheet)
                 processed_rows.append(processed_row)
@@ -278,9 +279,9 @@ def generate_results_table(rows: list[Row]) -> Table:
     table.add_column(header="URL", style="yellow", no_wrap=True)
     table.add_column(header="Details", style="white", no_wrap=True)
 
-    for idx, row in enumerate(rows, start=2):
+    for i, row in enumerate(rows, start=2):
         table.add_row(
-            str(idx),
+            str(i),
             row.status.value if isinstance(row.status, Status) else "Unknown",
             row.url,
             row.details,
@@ -291,8 +292,12 @@ def generate_results_table(rows: list[Row]) -> Table:
 
 def main() -> None:
     """Subscribe to URLs saved in a Google Sheet and update the sheet with the result."""
+    service_account_key_json = json.loads(
+        get_secret("Google Cloud Service Account Key", "michael-uloth-f8d0e53fdb41.json")
+    )
+
     # I/O
-    client = get_authenticated_sheets_client()
+    client = get_authenticated_sheets_client(service_account_key_json, GOOGLE_CLOUD_SCOPES)
     sheet = get_worksheet(client)
     rows = get_rows(sheet)
 
