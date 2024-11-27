@@ -3,7 +3,7 @@
 import sys
 
 from common.logs import log
-from rss.entities import FeedUrl
+from rss.domain import FeedUrl
 from rss.subscriptions.add.feedbin import create_subscription
 
 

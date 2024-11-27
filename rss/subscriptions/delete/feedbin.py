@@ -5,7 +5,7 @@ from typing import Literal
 
 from requests import HTTPError
 
-from rss.entities import SubscriptionId
+from rss.domain import SubscriptionId
 from rss.utils.feedbin import (
     API,
     HTTPMethod,

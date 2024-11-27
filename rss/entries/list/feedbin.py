@@ -5,7 +5,7 @@ from typing import Literal
 
 from requests import HTTPError
 
-from rss.entities import Entry, FeedId
+from rss.domain import Entry, FeedId
 from rss.utils.feedbin import API, RequestArgs, make_paginated_request
 
 

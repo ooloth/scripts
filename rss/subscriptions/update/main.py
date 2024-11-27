@@ -3,7 +3,7 @@
 import sys
 
 from common.logs import log
-from rss.entities import Subscription, SubscriptionId, SubscriptionTitle, SubscriptionTitleWithSuffix, Url
+from rss.domain import Subscription, SubscriptionId, SubscriptionTitle, SubscriptionTitleWithSuffix, Url
 from rss.subscriptions.get.feedbin import get_subscription
 from rss.subscriptions.update.feedbin import update_subscription
 

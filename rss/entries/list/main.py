@@ -3,7 +3,7 @@
 import sys
 
 from common.logs import log
-from rss.entities import FeedId
+from rss.domain import FeedId
 from rss.entries.list.feedbin import get_feed_entries
 
 

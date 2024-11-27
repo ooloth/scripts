@@ -7,7 +7,7 @@
 import sys
 
 from common.logs import log
-from rss.entities import SubscriptionId
+from rss.domain import SubscriptionId
 from rss.subscriptions.delete.feedbin import delete_subscription
 
 

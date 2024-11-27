@@ -6,7 +6,7 @@ from typing import Literal
 
 from requests import HTTPError
 
-from rss.entities import EntryId
+from rss.domain import EntryId
 from rss.utils.feedbin import API, HTTPMethod, RequestArgs, make_request
 
 MAX_ENTRIES_PER_BATCH = 1000

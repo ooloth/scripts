@@ -3,7 +3,7 @@
 import sys
 
 from common.logs import log
-from rss.entities import EntryId
+from rss.domain import EntryId
 from rss.entries.mark_unread.feedbin import UnreadEntriesResponse, create_unread_entries
 
 

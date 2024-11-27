@@ -4,6 +4,7 @@ from pydantic import BaseModel
 
 EntryId = int
 FeedId = int
+FeedTitle = str
 FeedUrl = str
 SubscriptionId = int
 SubscriptionTitle = str
@@ -16,12 +17,12 @@ class Entry(BaseModel):
 
 class FeedOption(BaseModel):
     feed_url: FeedUrl
-    title: str
+    title: FeedTitle
 
 
 @dataclass
 class SubscriptionTitleWithSuffix:
-    title: str
+    title: SubscriptionTitle
 
     def __post_init__(self) -> None:
         self.validate_title(self.title)

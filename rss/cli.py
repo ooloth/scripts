@@ -10,7 +10,7 @@ import typer
 
 from common.cli import DryRun
 from common.logs import log
-from rss.entities import FeedOption
+from rss.domain import FeedOption
 
 subscriptions_app = typer.Typer(no_args_is_help=True)
 entries_app = typer.Typer(no_args_is_help=True)
