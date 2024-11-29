@@ -8,8 +8,8 @@ from typing import Annotated
 import rich
 import typer
 
-from common.cli import DryRun
 from common.logs import log
+from common.typer import DryRun
 from rss.domain import FeedOption
 
 subscriptions_app = typer.Typer(no_args_is_help=True)

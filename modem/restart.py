@@ -3,10 +3,10 @@ import os
 import typer
 from playwright.sync_api import sync_playwright
 
-from common.cli import DryRun
 from common.logs import log
 from common.secrets import get_secret
 from common.sendgrid import send_email
+from common.typer import DryRun
 
 app = typer.Typer(no_args_is_help=True)
 
