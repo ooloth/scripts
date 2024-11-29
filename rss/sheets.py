@@ -24,8 +24,9 @@ Step 3: Share Google Sheet
 
 import json
 from enum import Enum
+from functools import partial
 from itertools import groupby
-from typing import Literal
+from typing import Callable, Literal
 
 from google.oauth2.service_account import Credentials
 from gspread.auth import authorize
@@ -35,6 +36,7 @@ from pydantic import BaseModel
 from rich.console import Console
 from rich.table import Table
 
+# from common.fp import pipe
 from common.logs import log
 from common.secrets import get_secret
 from common.sendgrid import send_email
@@ -222,14 +224,56 @@ def update_row(
     sheet.update(row_values, row_range)
 
 
+def process_new_row(row: Row, sheet: Worksheet) -> Row:
+    if row.status != Status.NEW:
+        return row
+
+    processed_row = subscribe_and_return_updated_row(row)
+    update_row(row=processed_row, row_index=processed_row.index, sheet=sheet)
+    return processed_row
+
+
+def partially_apply_sheet(
+    sheet: Worksheet,
+    funcs: list[Callable[..., Row]],
+) -> list[Callable[..., Row]]:
+    return [partial(func, sheet=sheet) for func in funcs]
+
+
 def process_rows(rows: list[Row], sheet: Worksheet) -> list[Row]:
     """
     TODO:
-    - Make less imperative and more functional
     - Accumulate API calls and return them to be made in bulk later?
     - Recursively call until all rows are in a terminal state?
     - Make one bulk spreadsheet update at the end instead of defensively updating status throughout?
     """
+
+    # functions = partially_apply_sheet(
+    #     sheet, [process_new_row, process_subscribed_row, process_backlog_unread_row]
+    # )
+
+    # new_to_subscribed = partial(process_new_row, sheet=sheet)
+    # new_to_subscribed = partial(process_new_row, sheet=sheet)
+    # subscribed_to_unread = partial(process_subscribed_row, sheet=sheet)
+    # unread_to_renamed = partial(process_unread_backlog_row, sheet=sheet)
+
+    # def process_row(row: Row) -> Row:
+    #     processed_row = pipe(row, *functions)
+    #     processed_row = pipe(row, process_new_row, process_subscribed_row, process_backlog_unread_row)
+
+    #     processed_row = reduce(
+    #         lambda acc, f: f(acc),
+    #         (new_to_subscribed, new_to_subscribed, new_to_subscribed),
+    #         row,
+    #     )
+
+    #     if not isinstance(processed_row, Row):
+    #         log.error(f"🚨 failed to process row: {row}")
+    #         return row
+
+    #     return processed_row
+
+    # return list(map(process_row, rows))
 
     processed_rows: list[Row] = []
 
