@@ -111,16 +111,20 @@ def parse_rows(sheet: Worksheet) -> list[Row]:
     def parse_checkbox(value: Literal["TRUE", "FALSE", ""]) -> bool:
         return value == "TRUE"
 
+    def parse_int(value: str) -> int | Literal[""]:
+        return int(value) if value else ""
+
+    def parse_status(value: str) -> Status:
+        return Status(value) if value else Status.NEW
+
     return [
         Row(
             index=i,
-            url=FeedUrl(row.get(ColumnName.URL) if row.get(ColumnName.URL) else ""),
-            status=Status(row[ColumnName.STATUS]) if row.get(ColumnName.STATUS) else Status.NEW,
-            subscription_id=SubscriptionId(row[ColumnName.SUBSCRIPTION_ID])
-            if row.get(ColumnName.SUBSCRIPTION_ID)
-            else "",
-            feed_id=FeedId(row[ColumnName.FEED_ID]) if row.get(ColumnName.FEED_ID) else "",
-            details=str(row.get(ColumnName.DETAILS, "")),
+            url=row.get(ColumnName.URL),
+            status=parse_status(row[ColumnName.STATUS]),
+            subscription_id=parse_int(row[ColumnName.SUBSCRIPTION_ID]),
+            feed_id=parse_int(row[ColumnName.FEED_ID]),
+            details=row.get(ColumnName.DETAILS),
             subscribed=parse_checkbox(row.get(ColumnName.SUBSCRIBED)),
             backlog_unread=parse_checkbox(row.get(ColumnName.BACKLOG_UNREAD)),
             suffix_added=parse_checkbox(row.get(ColumnName.SUFFIX_ADDED)),
@@ -351,9 +355,12 @@ def main() -> None:
     sheet = get_worksheet(client)
     rows = parse_rows(sheet)
     log.debug(f"🔍 rows: {rows}")
+    return
 
     # TODO: make pure + make the API calls in bulk later?
     updated_rows = process_rows(rows, sheet)
+    assert len(rows) == len(updated_rows), "Number of rows should not change"
+
     subject, html = generate_results_email(rows, updated_rows)
     table = generate_results_table(updated_rows)
 
