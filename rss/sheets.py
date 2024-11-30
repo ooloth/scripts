@@ -55,11 +55,14 @@ SHEET_NAME = "RSS Feed Wish List 🔖"
 
 
 class ColumnName(str, Enum):
-    DETAILS = "Details"
-    FEED_ID = "Feed ID"
+    URL = "URL to subscribe to"
     STATUS = "Status"
     SUBSCRIPTION_ID = "Subscription ID"
-    URL = "URL to subscribe to"
+    FEED_ID = "Feed ID"
+    DETAILS = "Details"
+    SUBSCRIBED = "Subscribed?"
+    BACKLOG_UNREAD = "Backlog marked unread?"
+    SUFFIX_ADDED = "Title suffix added?"
 
 
 class Status(str, Enum):
@@ -74,11 +77,14 @@ class Status(str, Enum):
 
 class Row(BaseModel):
     index: int
-    details: str
-    feed_id: FeedId | Literal[""]
+    url: FeedUrl
     status: Status
     subscription_id: SubscriptionId | Literal[""]
-    url: FeedUrl
+    feed_id: FeedId | Literal[""]
+    details: str
+    subscribed: bool
+    backlog_unread: bool
+    suffix_added: bool
 
 
 JsonParsed = dict[str, str]
@@ -99,28 +105,26 @@ def get_worksheet(client: Client, sheet_name: str = SHEET_NAME) -> Worksheet:
     return client.open(sheet_name).sheet1
 
 
-def get_rows(
-    sheet: Worksheet,
-    *,
-    details_col_name: ColumnName = ColumnName.DETAILS,
-    feed_id_col_name: ColumnName = ColumnName.FEED_ID,
-    status_col_name: ColumnName = ColumnName.STATUS,
-    subscription_id_col_name: ColumnName = ColumnName.SUBSCRIPTION_ID,
-    url_col_name: ColumnName = ColumnName.URL,
-) -> list[Row]:
+def parse_rows(sheet: Worksheet) -> list[Row]:
     """Get the parsed rows from the Google Sheet."""
     data = sheet.get_all_records()
+
+    def parse_checkbox(value: Literal["TRUE", "FALSE", ""]) -> bool:
+        return value == "TRUE"
 
     return [
         Row(
             index=i,
-            details=str(row.get(details_col_name, "")),
-            feed_id=FeedId(row[feed_id_col_name]) if row.get(feed_id_col_name) else "",
-            status=Status(row[status_col_name]) if row.get(status_col_name) else Status.NEW,
-            subscription_id=SubscriptionId(row[subscription_id_col_name])
-            if row.get(subscription_id_col_name)
+            url=FeedUrl(row.get(ColumnName.URL) if row.get(ColumnName.URL) else ""),
+            status=Status(row[ColumnName.STATUS]) if row.get(ColumnName.STATUS) else Status.NEW,
+            subscription_id=SubscriptionId(row[ColumnName.SUBSCRIPTION_ID])
+            if row.get(ColumnName.SUBSCRIPTION_ID)
             else "",
-            url=FeedUrl(row[url_col_name] if row.get(url_col_name) else ""),
+            feed_id=FeedId(row[ColumnName.FEED_ID]) if row.get(ColumnName.FEED_ID) else "",
+            details=str(row.get(ColumnName.DETAILS, "")),
+            subscribed=parse_checkbox(row.get(ColumnName.SUBSCRIBED)),
+            backlog_unread=parse_checkbox(row.get(ColumnName.BACKLOG_UNREAD)),
+            suffix_added=parse_checkbox(row.get(ColumnName.SUFFIX_ADDED)),
         )
         for i, row in enumerate(data, start=2)  # skip header row
     ]
@@ -371,7 +375,8 @@ def main() -> None:
     # I/O
     client = get_authenticated_sheets_client(service_account_key_json, GOOGLE_CLOUD_SCOPES)
     sheet = get_worksheet(client)
-    rows = get_rows(sheet)
+    rows = parse_rows(sheet)
+    log.debug(f"🔍 rows: {rows}")
 
     # TODO: make pure + make the API calls in bulk later?
     updated_rows = process_rows(rows, sheet)
