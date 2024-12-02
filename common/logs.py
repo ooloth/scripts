@@ -48,19 +48,25 @@ def get_logger() -> logging.Logger:
     global _log
 
     if _log is None:
-        # Configure both console and file handlers
+        # Configure console + file handlers
         logging.basicConfig(
-            level=logging.DEBUG,
+            level=logging.WARNING,  # set third-party loggers to WARNING
             format="%(message)s",
             datefmt="[%X]",
-            handlers=[RichHandler(), file_handler(level="debug"), file_handler(level="error")],
+            handlers=[
+                RichHandler(rich_tracebacks=True, tracebacks_show_locals=True),
+                file_handler(level="debug"),
+                file_handler(level="error"),
+            ],
         )
 
         # Always output exceptions and stack traces when logging an error
         logging.error = partial(logging.error, exc_info=True, stack_info=True)
         logging.critical = partial(logging.critical, exc_info=True, stack_info=True)
 
-        _log = logging.getLogger()
+        # Set log level to DEBUG for my logs only
+        _log = logging.getLogger("scripts")
+        _log.setLevel(logging.DEBUG)
 
     return _log
 
