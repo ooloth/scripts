@@ -23,11 +23,14 @@ Step 3: Share Google Sheet
 """
 
 import json
+from dataclasses import dataclass
 from enum import Enum
 from itertools import groupby
 from typing import Literal
 
-from expression import curry, pipe
+import polars as pl
+
+# from expression import pipe
 from google.oauth2.service_account import Credentials
 from gspread.auth import authorize
 from gspread.client import Client
@@ -60,8 +63,8 @@ class ColumnName(str, Enum):
     FEED_ID = "Feed ID"
     DETAILS = "Details"
     SUBSCRIBED = "Subscribed?"
-    BACKLOG_UNREAD = "Backlog marked unread?"
-    SUFFIX_ADDED = "Title suffix added?"
+    MARKED_UNREAD = "Marked unread?"
+    SUFFIX_ADDED = "Suffix added?"
 
 
 class Status(str, Enum):
@@ -70,7 +73,7 @@ class Status(str, Enum):
     NOT_FOUND = "No Feed Found"
     MULTIPLE_CHOICES = "Multiple Feed URLs"
     SUBSCRIBED = "Subscribed"
-    BACKLOG_UNREAD = "Backlog Marked Unread"
+    MARKED_UNREAD = "Marked Unread"
     SUFFIX_ADDED = "Suffix Added"
 
 
@@ -82,13 +85,14 @@ class Row(BaseModel):
     feed_id: FeedId | Literal[""]
     details: str
     subscribed: bool
-    backlog_unread: bool
+    marked_unread: bool
     suffix_added: bool
 
 
 JsonParsed = dict[str, str]
 
 
+# I/O
 def get_authenticated_sheets_client(
     service_account_info: JsonParsed,
     scopes: list[str],
@@ -99,16 +103,20 @@ def get_authenticated_sheets_client(
     return client
 
 
+# I/O
 def get_worksheet(client: Client, sheet_name: str = SHEET_NAME) -> Worksheet:
     """Get the form responses worksheet from the Google Sheet."""
     return client.open(sheet_name).sheet1
 
 
-def parse_rows(sheet: Worksheet) -> list[Row]:
+UnparsedRow = dict[str, str | int]
+
+
+def parse_rows(unparsed_rows: list[UnparsedRow]) -> list[Row]:
     """Get the parsed rows from the Google Sheet."""
-    data = sheet.get_all_records()
 
     def parse_checkbox(value: Literal["TRUE", "FALSE", ""]) -> bool:
+        """Comes in as all caps TRUE/FALSE; needs to go out as a bool later."""
         return value == "TRUE"
 
     def parse_int(value: str) -> int | Literal[""]:
@@ -126,18 +134,72 @@ def parse_rows(sheet: Worksheet) -> list[Row]:
             feed_id=parse_int(row[ColumnName.FEED_ID]),
             details=row.get(ColumnName.DETAILS),
             subscribed=parse_checkbox(row.get(ColumnName.SUBSCRIBED)),
-            backlog_unread=parse_checkbox(row.get(ColumnName.BACKLOG_UNREAD)),
+            marked_unread=parse_checkbox(row.get(ColumnName.MARKED_UNREAD)),
             suffix_added=parse_checkbox(row.get(ColumnName.SUFFIX_ADDED)),
         )
-        for i, row in enumerate(data, start=2)  # skip header row
+        for i, row in enumerate(unparsed_rows, start=2)  # skip header row
     ]
+
+
+def parse_as_df(unparsed_rows: list[UnparsedRow]) -> pl.DataFrame:
+    """Get the parsed rows from the Google Sheet as a DataFrame."""
+    log.debug(f"🔍 unparsed_rows: {unparsed_rows[0].keys()}")
+    return pl.DataFrame(
+        unparsed_rows,
+        schema=ColumnName,
+        schema_overrides={ColumnName.STATUS: Status},
+    ).with_row_index(offset=1)
+
+
+@dataclass
+class FeedbinApiCalls:
+    subscribe: list[Row] | None = None
+    mark_unread: list[Row] | None = None
+    add_suffix: list[Row] | None = None
+
+
+def plan_api_calls(rows: list[Row]) -> FeedbinApiCalls:
+    """Plan the updates to the rows."""
+
+    calls = FeedbinApiCalls()
+
+    def append(item: Row, to: list[Row] | None) -> list[Row]:
+        """Append an item to a list, creating the list if it doesn't exist."""
+        return (to or []) + [item]
+
+    for row in rows:
+        if row.subscribed is False:
+            calls.subscribe = append(row, calls.subscribe)
+        if row.marked_unread is False:
+            calls.mark_unread = append(row, calls.mark_unread)
+        if row.suffix_added is False:
+            calls.add_suffix = append(row, calls.add_suffix)
+
+    return calls
+
+
+def plan_api_calls_df(df: pl.DataFrame) -> FeedbinApiCalls:
+    """Plan the updates to the rows."""
+
+    calls = FeedbinApiCalls()
+
+    def append(item: Row, to: list[Row] | None) -> list[Row]:
+        """Append an item to a list, creating the list if it doesn't exist."""
+        return (to or []) + [item]
+
+    for row in df.iter_rows(named=True):
+        if row[ColumnName.SUBSCRIBED] != "TRUE":
+            calls.subscribe = append(row, calls.subscribe)
+        if row[ColumnName.MARKED_UNREAD] != "TRUE":
+            calls.mark_unread = append(row, calls.mark_unread)
+        if row[ColumnName.SUFFIX_ADDED] != "TRUE":
+            calls.add_suffix = append(row, calls.add_suffix)
+
+    return calls
 
 
 def subscribe_and_return_updated_row(row: Row) -> Row:
     """Subscribe to a URL and return the updated row."""
-    if row.status in {Status.SUBSCRIBED, Status.BACKLOG_UNREAD, Status.SUFFIX_ADDED}:
-        return row
-
     result, data = create_subscription(url=row.url)
 
     match result:
@@ -145,9 +207,10 @@ def subscribe_and_return_updated_row(row: Row) -> Row:
             return row.model_copy(
                 update={
                     "status": Status.SUBSCRIBED,
-                    "details": "",
-                    "feed_id": data.feed_id if isinstance(data, Subscription) else "",
                     "subscription_id": data.id if isinstance(data, Subscription) else "",
+                    "feed_id": data.feed_id if isinstance(data, Subscription) else "",
+                    "details": "",
+                    "subscribed": True,
                 }
             )
         case CreateSubscriptionResult.MULTIPLE_CHOICES:
@@ -166,16 +229,13 @@ def subscribe_and_return_updated_row(row: Row) -> Row:
 
 def mark_backlog_unread_and_return_updated_row(row: Row, entry_ids: list[EntryId]) -> Row:
     """Mark subscription's entire backlog as unread and return the updated row."""
-    if row.status in {Status.BACKLOG_UNREAD, Status.SUFFIX_ADDED} or not isinstance(
-        entry_ids, list
-    ):
-        return row
-
     result, data = create_unread_entries(entry_ids)
 
     match result:
         case CreateUnreadEntriesResult.OK:
-            return row.model_copy(update={"status": Status.BACKLOG_UNREAD, "details": ""})
+            return row.model_copy(
+                update={"status": Status.MARKED_UNREAD, "details": "", "marked_unread": True}
+            )
         case (
             CreateUnreadEntriesResult.HTTP_ERROR
             | CreateUnreadEntriesResult.UNEXPECTED_ERROR
@@ -184,12 +244,10 @@ def mark_backlog_unread_and_return_updated_row(row: Row, entry_ids: list[EntryId
             return row.model_copy(update={"status": Status.ERROR, "details": f"{result}: {data}"})
 
 
-def append_suffix_to_title_and_return_updated_row(row: Row) -> Row:
+def add_title_suffix_and_return_updated_row(row: Row) -> Row:
     """Append 📖 or 📺 to subscription title and return the updated row."""
-    if row.status == Status.SUFFIX_ADDED or not isinstance(row.subscription_id, SubscriptionId):
-        return row
-
     new_title = generate_new_title(row.subscription_id)
+
     if new_title is None:
         return row.model_copy(
             update={"status": Status.ERROR, "details": "Failed to generate new title"}
@@ -203,6 +261,7 @@ def append_suffix_to_title_and_return_updated_row(row: Row) -> Row:
                 update={
                     "status": Status.SUFFIX_ADDED,
                     "details": data.title if isinstance(data, Subscription) else data,
+                    "suffix_added": True,
                 }
             )
         case UpdateSubscriptionResult.FORBIDDEN | UpdateSubscriptionResult.NOT_FOUND:
@@ -225,20 +284,21 @@ def update_row(
     sheet: Worksheet,
 ) -> None:
     """Update the row in the Google Sheet."""
-    row_range = f"C{row_index}:F{row_index}"  # columns C to F of the row
-    row_values = [[row.status.value, row.subscription_id, row.feed_id, str(row.details)]]
+
+    row_range = f"C{row_index}:I{row_index}"  # columns C to F of the row
+    row_values = [
+        [
+            row.subscribed,
+            row.marked_unread,
+            row.suffix_added,
+            row.status.value,
+            row.subscription_id,
+            row.feed_id,
+            str(row.details),
+        ]
+    ]
 
     sheet.update(row_values, row_range)
-
-
-@curry(1)
-def process_new_row(row: Row, sheet: Worksheet) -> Row:
-    if row.status != Status.NEW:
-        return row
-
-    processed_row = subscribe_and_return_updated_row(row)
-    update_row(row=processed_row, row_index=processed_row.index, sheet=sheet)
-    return processed_row
 
 
 def process_rows(rows: list[Row], sheet: Worksheet) -> list[Row]:
@@ -249,30 +309,25 @@ def process_rows(rows: list[Row], sheet: Worksheet) -> list[Row]:
     - Make one bulk spreadsheet update at the end instead of defensively updating status throughout?
     """
 
-    def process_row(row: Row) -> Row:
-        processed_row = pipe(row, process_new_row(sheet))
-        log.debug(f"🔍 processed_row: {processed_row}")
+    # def process_row(row: Row) -> Row:
+    #     processed_row = pipe(row, process_new_row(sheet))
+    #     log.debug(f"🔍 processed_row: {processed_row}")
 
-        return processed_row
+    #     return processed_row
 
-    return list(map(process_row, rows))
+    # return list(map(process_row, rows))
 
     processed_rows: list[Row] = []
 
     for row in rows:
-        if row.status == Status.SUFFIX_ADDED:
-            log.debug(f"🔍 already processed: {row.url}")
-            processed_rows.append(row)
-            continue
-
         processed_row = row
 
-        if row.status == Status.NEW:
+        if row.subscribed is False:
             processed_row = subscribe_and_return_updated_row(row)
             update_row(row=processed_row, row_index=processed_row.index, sheet=sheet)
             log.debug(f"🔍 updated_row: {processed_row}")
 
-        if processed_row.status == Status.SUBSCRIBED and isinstance(processed_row.feed_id, FeedId):
+        if row.marked_unread is False and isinstance(processed_row.feed_id, FeedId):
             result, entries = get_feed_entries(feed_id=processed_row.feed_id)
             if result != GetFeedEntriesResult.OK or not isinstance(entries, list):
                 processed_row = processed_row.model_copy(update={"details": f"{result}: {entries}"})
@@ -286,10 +341,8 @@ def process_rows(rows: list[Row], sheet: Worksheet) -> list[Row]:
             log.debug(f"🔍 updated_row: {processed_row}")
             update_row(row=processed_row, row_index=processed_row.index, sheet=sheet)
 
-        if processed_row.status == Status.BACKLOG_UNREAD and isinstance(
-            processed_row.subscription_id, SubscriptionId
-        ):
-            processed_row = append_suffix_to_title_and_return_updated_row(processed_row)
+        if row.suffix_added is False and isinstance(processed_row.subscription_id, SubscriptionId):
+            processed_row = add_title_suffix_and_return_updated_row(processed_row)
             log.debug(f"🔍 updated_row: {processed_row}")
             update_row(row=processed_row, row_index=processed_row.index, sheet=sheet)
 
@@ -346,18 +399,26 @@ def generate_results_table(rows: list[Row]) -> Table:
 
 def main() -> None:
     """Subscribe to URLs saved in a Google Sheet and update the sheet with the result."""
-    service_account_key_json = json.loads(
-        get_secret("Google Cloud Service Account Key", "michael-uloth-f8d0e53fdb41.json")
-    )
 
     # I/O
-    client = get_authenticated_sheets_client(service_account_key_json, GOOGLE_CLOUD_SCOPES)
+    service_account_info = json.loads(
+        get_secret("Google Cloud Service Account Key", "michael-uloth-f8d0e53fdb41.json")
+    )
+    client = get_authenticated_sheets_client(service_account_info, GOOGLE_CLOUD_SCOPES)
     sheet = get_worksheet(client)
-    rows = parse_rows(sheet)
-    log.debug(f"🔍 rows: {rows}")
-    return
+
+    # Pure
+    rows = parse_rows(sheet.get_all_records())
+
+    # df = parse_as_df(sheet.get_all_records())
+    # log.debug(f"🔍 df: {df}")
+
+    # api_calls = plan_api_calls_df(df)
+    # api_calls = plan_api_calls(rows)
+    # log.debug(f"🔍 api_calls: {api_calls}")
 
     # TODO: make pure + make the API calls in bulk later?
+    # DOCS: polars version: https://docs.gspread.org/en/latest/user-guide.html#using-gspread-with-pandas
     updated_rows = process_rows(rows, sheet)
     assert len(rows) == len(updated_rows), "Number of rows should not change"
 
