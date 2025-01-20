@@ -1,7 +1,8 @@
 on:
   # see: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows
-  schedule:
-    - cron: "30 12 * * *"  # every day at 12:30 PM UTC (8:30 AM EDT, 7:30 AM EST)
+  # NOTE: pausing for now since it doesn't seem to fix the underlying issue
+  # schedule:
+    # - cron: "30 12 * * *"  # every day at 12:30 PM UTC (8:30 AM EDT, 7:30 AM EST)
   workflow_dispatch: # allow manual triggering
 
 env:
