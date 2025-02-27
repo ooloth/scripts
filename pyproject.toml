@@ -30,7 +30,6 @@
   ]
 
 [tool.mypy]
-  plugins = ["returns.contrib.mypy.returns_plugin"]
   strict = true
 
 [tool.pytest.ini_options]
