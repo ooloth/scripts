@@ -44,7 +44,7 @@ class Board:
 @dataclass(frozen=True)
 class Game:
     board: Board | None = Board()
-    players: set[Player] = field(default_factory=lambda: {Player("X"), Player("O")})
+    players: tuple[Player] = Player("X"), Player("O")
     current_player: Player | None = Player("X")  # need this? track in Player?
     winner: Player | None = None
 

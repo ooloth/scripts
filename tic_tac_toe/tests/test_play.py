@@ -12,7 +12,7 @@ def test_when_game_starts_board_is_empty():
 
 def test_when_game_starts_there_are_two_players():
     new_game = TicTacToe().new_game()
-    assert new_game.players == {Player("X"), Player("O")}
+    assert new_game.players == (Player("X"), Player("O"))
 
 
 def test_when_game_starts_player_x_goes_first():
