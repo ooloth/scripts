@@ -9,7 +9,7 @@ class Player:
 
 @dataclass(frozen=True)
 class Square:
-    value: Literal[" ", "X", "O"] | None = " "
+    value: Literal[" ", "X", "O"] = " "
 
 
 @dataclass(frozen=True)
