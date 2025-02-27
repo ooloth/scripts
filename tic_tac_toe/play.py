@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Literal
 
 
@@ -9,12 +9,16 @@ class Player:
 
 @dataclass(frozen=True)
 class Square:
-    value: str = " "
+    value: Literal[" ", "X", "O"] | None = " "
 
 
 @dataclass(frozen=True)
 class Board:
-    grid: tuple[tuple[Square, Square, Square]] = (
+    grid: tuple[
+        tuple[Square, Square, Square],
+        tuple[Square, Square, Square],
+        tuple[Square, Square, Square],
+    ] = (
         (Square(), Square(), Square()),
         (Square(), Square(), Square()),
         (Square(), Square(), Square()),
@@ -23,10 +27,10 @@ class Board:
     # def __eq__(self, other):
     #     return self.squares == other.squares
 
-    def __str__(self):
+    def __str__(self) -> str:
         rows = []
         for row in self.grid:
-            rows.append("│ " + " │ ".join([square.value for square in row]) + " │")
+            rows.append("│ " + " │ ".join([str(square.value) for square in row]) + " │")
         return (
             "┌───┬───┬───┐\n"
             f"{rows[0]}\n"
@@ -37,14 +41,15 @@ class Board:
             "└───┴───┴───┘"
         )
 
-    def render(self):
+    def render(self) -> str:
+        """TODO: remove this? let caller str(board) or print(board)?"""
         return str(self)
 
 
 @dataclass(frozen=True)
 class Game:
-    board: Board | None = Board()
-    players: tuple[Player] = Player("X"), Player("O")
+    board: Board = Board()
+    players: tuple[Player, Player] = Player("X"), Player("O")
     current_player: Player | None = Player("X")  # need this? track in Player?
     winner: Player | None = None
 
@@ -58,3 +63,16 @@ class TicTacToe:
     def load_game(self, board: Board) -> Game:
         """Load an existing game with a given board."""
         return Game(board=board)
+
+
+def main() -> None:
+    new_game = TicTacToe().new_game()
+    print(new_game.board)
+    print(new_game.board.render())
+    print(new_game.players)
+    print(new_game.current_player)
+    print(new_game.winner)
+
+
+if __name__ == "__main__":
+    main()
