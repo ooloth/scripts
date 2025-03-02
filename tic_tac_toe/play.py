@@ -50,7 +50,7 @@ class Board:
 class Game:
     board: Board = Board()
     players: tuple[Player, Player] = Player("X"), Player("O")
-    current_player: Player | None = Player("X")  # need this? track in Player?
+    current_player: Player = Player("X")  # need this? track in Player?
     winner: Player | None = None
 
 

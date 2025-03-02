@@ -9,22 +9,22 @@ from tic_tac_toe.play import Board, Player, Square, TicTacToe
 
 
 class TestGame:
-    def test_game_starts_with_empty_board(_) -> None:
-        new_game = TicTacToe().new_game()
-        assert all(square.value == " " for row in new_game.board.grid for square in row)
+    def test_new_game_starts_with_empty_board(_) -> None:
+        game = TicTacToe().new_game()
+        assert all(square.value == " " for row in game.board.grid for square in row)
 
-    def test_game_starts_with_two_players(_) -> None:
-        new_game = TicTacToe().new_game()
-        assert new_game.players == (Player("X"), Player("O"))
+    def test_new_game_starts_with_two_players(_) -> None:
+        game = TicTacToe().new_game()
+        assert game.players == (Player("X"), Player("O"))
 
-    def test_game_starts_with_player_x_going_first(_) -> None:
-        new_game = TicTacToe().new_game()
-        assert new_game.current_player == Player("X")
+    def test_new_game_starts_with_player_x_going_first(_) -> None:
+        game = TicTacToe().new_game()
+        assert game.current_player == Player("X")
 
 
 class TestBoard:
     def test_board_renders_correctly_when_empty(_) -> None:
-        new_game = TicTacToe().new_game()
+        game = TicTacToe().new_game()
         expected = textwrap.dedent(
             """
             ┌───┬───┬───┐
@@ -37,7 +37,7 @@ class TestBoard:
             """
         ).strip()
 
-        assert new_game.board.render() == expected
+        assert game.board.render() == expected
 
     def test_board_renders_correctly_when_populated(_) -> None:
         board = Board((
