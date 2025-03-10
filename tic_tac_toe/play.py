@@ -14,15 +14,25 @@ class Square:
 
 @dataclass(frozen=True)
 class Board:
-    grid: tuple[
-        tuple[Square, Square, Square],
-        tuple[Square, Square, Square],
-        tuple[Square, Square, Square],
-    ] = (
-        (Square(), Square(), Square()),
-        (Square(), Square(), Square()),
-        (Square(), Square(), Square()),
-    )
+    grid: list[list[Square]] = [
+        [Square(), Square(), Square()],
+        [Square(), Square(), Square()],
+        [Square(), Square(), Square()],
+    ]
+
+    # def get_square(self, row: Literal[0, 1, 2], col: Literal[0, 1, 2]) -> Square:
+    #     """Avoid this? No getters, no setters?"""
+    #     if 0 <= row < 3 and 0 <= col < 3:
+    #         return self.grid[row][col]
+    #     else:
+    #         raise IndexError("Row and column must be in the range 0-2.")
+
+    # def set_square(self, row: Literal[0, 1, 2], col: Literal[0, 1, 2], square: Square) -> None:
+    #     """Avoid this? No getters, no setters?"""
+    #     if 0 <= row < 3 and 0 <= col < 3:
+    #         self.grid[row][col] = square
+    #     else:
+    #         raise IndexError("Row and column must be in the range 0-2.")
 
     # def __eq__(self, other):
     #     return self.squares == other.squares
