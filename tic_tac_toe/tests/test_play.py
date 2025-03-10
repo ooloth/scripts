@@ -40,11 +40,11 @@ class TestRenderBoard:
         assert game.board.render() == expected
 
     def test_populated_board_renders_correctly(_) -> None:
-        board = Board((
-            (Square("X"), Square(" "), Square("O")),
-            (Square(" "), Square("O"), Square(" ")),
-            (Square(" "), Square(" "), Square("X")),
-        ))
+        board = Board([
+            [Square("X"), Square(" "), Square("O")],
+            [Square(" "), Square("O"), Square(" ")],
+            [Square(" "), Square(" "), Square("X")],
+        ])
         game = TicTacToe().load_game(board=board)
         expected = textwrap.dedent(
             """

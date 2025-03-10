@@ -14,12 +14,7 @@ class Square:
 
 @dataclass(frozen=True)
 class Board:
-    grid: list[list[Square]] = [
-        [Square(), Square(), Square()],
-        [Square(), Square(), Square()],
-        [Square(), Square(), Square()],
-    ]
-
+    grid: list[list[Square]]
     # def get_square(self, row: Literal[0, 1, 2], col: Literal[0, 1, 2]) -> Square:
     #     """Avoid this? No getters, no setters?"""
     #     if 0 <= row < 3 and 0 <= col < 3:
@@ -58,7 +53,7 @@ class Board:
 
 @dataclass(frozen=True)
 class Game:
-    board: Board = Board()
+    board: Board
     # just track one player (the current one)?
     players: tuple[Player, Player] = (Player("X"), Player("O"))
     current_player: Player = Player("X")  # need this? track in Player?
@@ -69,7 +64,8 @@ class Game:
 class TicTacToe:
     def new_game(self) -> Game:
         """Start a new game with an empty board."""
-        return Game()
+        empty_board = Board([list([Square() for _ in range(3)]) for _ in range(3)])
+        return Game(board=empty_board)
 
     def load_game(self, board: Board) -> Game:
         """Load an existing game with a given board."""
