@@ -49,7 +49,8 @@ class Board:
 @dataclass(frozen=True)
 class Game:
     board: Board = Board()
-    players: tuple[Player, Player] = Player("X"), Player("O")
+    # just track one player (the current one)?
+    players: tuple[Player, Player] = (Player("X"), Player("O"))
     current_player: Player = Player("X")  # need this? track in Player?
     winner: Player | None = None
 
@@ -66,12 +67,12 @@ class TicTacToe:
 
 
 def main() -> None:
-    new_game = TicTacToe().new_game()
-    print(new_game.board)
-    print(new_game.board.render())
-    print(new_game.players)
-    print(new_game.current_player)
-    print(new_game.winner)
+    game = TicTacToe().new_game()
+    print(game.board)
+    print(game.board.render())
+    print(game.players)
+    print(game.current_player)
+    print(game.winner)
 
 
 if __name__ == "__main__":

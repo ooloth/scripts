@@ -8,22 +8,22 @@ import textwrap
 from tic_tac_toe.play import Board, Player, Square, TicTacToe
 
 
-class TestGame:
-    def test_new_game_starts_with_empty_board(_) -> None:
+class TestNewGame:
+    def test_board_is_empty(_) -> None:
         game = TicTacToe().new_game()
         assert all(square.value == " " for row in game.board.grid for square in row)
 
-    def test_new_game_starts_with_two_players(_) -> None:
+    def test_there_are_two_players(_) -> None:
         game = TicTacToe().new_game()
         assert game.players == (Player("X"), Player("O"))
 
-    def test_new_game_starts_with_player_x_going_first(_) -> None:
+    def test_player_x_goes_first(_) -> None:
         game = TicTacToe().new_game()
         assert game.current_player == Player("X")
 
 
-class TestBoard:
-    def test_board_renders_correctly_when_empty(_) -> None:
+class TestRenderBoard:
+    def test_empty_board_renders_correctly(_) -> None:
         game = TicTacToe().new_game()
         expected = textwrap.dedent(
             """
@@ -39,7 +39,7 @@ class TestBoard:
 
         assert game.board.render() == expected
 
-    def test_board_renders_correctly_when_populated(_) -> None:
+    def test_populated_board_renders_correctly(_) -> None:
         board = Board((
             (Square("X"), Square(" "), Square("O")),
             (Square(" "), Square("O"), Square(" ")),
