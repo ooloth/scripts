@@ -50,6 +50,8 @@ class Board:
         """TODO: remove this? let caller str(board) or print(board)?"""
         return str(self)
 
+type Coordinate = tuple[int, int]
+
 
 @dataclass(frozen=True)
 class Game:
@@ -58,6 +60,15 @@ class Game:
     players: tuple[Player, Player] = (Player("X"), Player("O"))
     current_player: Player = Player("X")  # need this? track in Player?
     winner: Player | None = None
+
+    def offer_choices(self) -> list[Coordinate]:
+        """Use capabilities approach to only offer valid choices."""
+        return [
+            (row_index, col_index)
+            for row_index, squares in enumerate(self.board.grid)
+            for col_index, square in enumerate(squares)
+            if square.value == " "
+        ]
 
 
 @dataclass(frozen=True)
