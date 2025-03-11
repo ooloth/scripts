@@ -15,6 +15,7 @@ class Square:
 @dataclass(frozen=True)
 class Board:
     grid: list[list[Square]]
+
     # def get_square(self, row: Literal[0, 1, 2], col: Literal[0, 1, 2]) -> Square:
     #     """Avoid this? No getters, no setters?"""
     #     if 0 <= row < 3 and 0 <= col < 3:
@@ -32,10 +33,13 @@ class Board:
     # def __eq__(self, other):
     #     return self.squares == other.squares
 
-    def __str__(self) -> str:
+    def render(self) -> str:
+        """Represent board as a 3x3 grid of squares."""
         rows = []
+
         for row in self.grid:
             rows.append("│ " + " │ ".join([str(square.value) for square in row]) + " │")
+
         return (
             "┌───┬───┬───┐\n"
             f"{rows[0]}\n"
@@ -46,9 +50,6 @@ class Board:
             "└───┴───┴───┘"
         )
 
-    def render(self) -> str:
-        """TODO: remove this? let caller str(board) or print(board)?"""
-        return str(self)
 
 type Coordinate = tuple[int, int]
 
@@ -85,11 +86,7 @@ class TicTacToe:
 
 def main() -> None:
     game = TicTacToe().new_game()
-    print(game.board)
     print(game.board.render())
-    print(game.players)
-    print(game.current_player)
-    print(game.winner)
 
 
 if __name__ == "__main__":
