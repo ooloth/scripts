@@ -71,6 +71,30 @@ class Game:
             if square.value == " "
         ]
 
+    def play(self):
+        """
+        TODO: https://www.youtube.com/watch?v=Q6CCdCBVypg
+        repeat
+            Initialise board
+            while not game over
+                player 1 turn
+                check for game over
+                if not game over
+                    player 2 turn
+                    check for game over
+                end if
+            end while
+            calculate winner
+            display winner
+            another game ?
+        until exit selected
+        """
+        while self.winner is None:
+            choice = input(f"Player {self.current_player.symbol} enter your choice: ")
+            print(self.board.render())
+            pass
+        pass
+
 
 @dataclass(frozen=True)
 class TicTacToe:
@@ -86,7 +110,7 @@ class TicTacToe:
 
 def main() -> None:
     game = TicTacToe().new_game()
-    print(game.board.render())
+    game.play()
 
 
 if __name__ == "__main__":
