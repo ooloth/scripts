@@ -107,33 +107,35 @@ def get_worksheet(client: Client, sheet_name: str = SHEET_NAME) -> Worksheet:
     return client.open(sheet_name).sheet1
 
 
-UnparsedRow = dict[str, str | int | float]
+SheetsColumnName = str
+SheetsCellValue = str | int | float
+UnparsedRow = dict[SheetsColumnName, SheetsCellValue]
 
 
 def parse_rows(unparsed_rows: list[UnparsedRow]) -> list[Row]:
     """Get the parsed rows from the Google Sheet."""
 
-    def parse_checkbox(value: Literal["TRUE", "FALSE", ""]) -> bool:
+    def parse_str(value: SheetsCellValue) -> str:
+        return str(value) if value else ""
+
+    def parse_checkbox(value: SheetsCellValue) -> bool:
         """Comes in as all caps TRUE/FALSE; needs to go out as a bool later."""
         return value == "TRUE"
 
-    def parse_int(value: str) -> int | Literal[""]:
+    def parse_int(value: SheetsCellValue) -> int | Literal[""]:
         return int(value) if value else ""
-
-    def parse_status(value: str) -> Status:
-        return Status(value) if value else Status.NEW
 
     return [
         Row(
             index=i,
-            url=row.get(ColumnName.URL),
-            status=parse_status(row[ColumnName.STATUS]),
+            url=parse_str(row[ColumnName.URL]),
+            status=Status(row[ColumnName.STATUS]) if row[ColumnName.STATUS] else Status.NEW,
             subscription_id=parse_int(row[ColumnName.SUBSCRIPTION_ID]),
             feed_id=parse_int(row[ColumnName.FEED_ID]),
-            details=row.get(ColumnName.DETAILS),
-            subscribed=parse_checkbox(row.get(ColumnName.SUBSCRIBED)),
-            marked_unread=parse_checkbox(row.get(ColumnName.MARKED_UNREAD)),
-            suffix_added=parse_checkbox(row.get(ColumnName.SUFFIX_ADDED)),
+            details=parse_str(row[ColumnName.DETAILS]),
+            subscribed=parse_checkbox(row.get(ColumnName.SUBSCRIBED, "")),
+            marked_unread=parse_checkbox(row.get(ColumnName.MARKED_UNREAD, "")),
+            suffix_added=parse_checkbox(row.get(ColumnName.SUFFIX_ADDED, "")),
         )
         for i, row in enumerate(unparsed_rows, start=2)  # skip header row
     ]
