@@ -352,7 +352,12 @@ def process_rows(rows: list[Row], sheet: Worksheet) -> list[Row]:
 
 
 def generate_results_email(original_rows: list[Row], updated_rows: list[Row]) -> tuple[str, str]:
-    """Generate the email subject and HTML body for the results."""
+    """
+    Generate the email subject and HTML body for the results.
+
+    TODO:
+    - [ ] Identify the rows that changed status this run and just call out those changes + any outstanding actions.
+    """
     subject = "✅ RSS Feed Wish List Updated"
 
     def group_rows_by_status(rows: list[Row]) -> dict[str, list[Row]]:
