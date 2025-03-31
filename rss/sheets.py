@@ -109,7 +109,7 @@ def get_worksheet(client: Client, sheet_name: str = SHEET_NAME) -> Worksheet:
     return client.open(sheet_name).sheet1
 
 
-UnparsedRow = dict[str, str | int]
+UnparsedRow = dict[str, str | int | float]
 
 
 def parse_rows(unparsed_rows: list[UnparsedRow]) -> list[Row]:
