@@ -28,8 +28,6 @@ from enum import Enum
 from itertools import groupby
 from typing import Literal
 
-import polars as pl
-
 # from expression import pipe
 from google.oauth2.service_account import Credentials
 from gspread.auth import authorize
@@ -141,16 +139,6 @@ def parse_rows(unparsed_rows: list[UnparsedRow]) -> list[Row]:
     ]
 
 
-def parse_as_df(unparsed_rows: list[UnparsedRow]) -> pl.DataFrame:
-    """Get the parsed rows from the Google Sheet as a DataFrame."""
-    log.debug(f"🔍 unparsed_rows: {unparsed_rows[0].keys()}")
-    return pl.DataFrame(
-        unparsed_rows,
-        schema=ColumnName,
-        schema_overrides={ColumnName.STATUS: Status},
-    ).with_row_index(offset=1)
-
-
 @dataclass
 class FeedbinApiCalls:
     subscribe: list[Row] | None = None
@@ -173,26 +161,6 @@ def plan_api_calls(rows: list[Row]) -> FeedbinApiCalls:
         if row.marked_unread is False:
             calls.mark_unread = append(row, calls.mark_unread)
         if row.suffix_added is False:
-            calls.add_suffix = append(row, calls.add_suffix)
-
-    return calls
-
-
-def plan_api_calls_df(df: pl.DataFrame) -> FeedbinApiCalls:
-    """Plan the updates to the rows."""
-
-    calls = FeedbinApiCalls()
-
-    def append(item: Row, to: list[Row] | None) -> list[Row]:
-        """Append an item to a list, creating the list if it doesn't exist."""
-        return (to or []) + [item]
-
-    for row in df.iter_rows(named=True):
-        if row[ColumnName.SUBSCRIBED] != "TRUE":
-            calls.subscribe = append(row, calls.subscribe)
-        if row[ColumnName.MARKED_UNREAD] != "TRUE":
-            calls.mark_unread = append(row, calls.mark_unread)
-        if row[ColumnName.SUFFIX_ADDED] != "TRUE":
             calls.add_suffix = append(row, calls.add_suffix)
 
     return calls
@@ -423,15 +391,10 @@ def main() -> None:
     # Pure
     rows = parse_rows(sheet.get_all_records())
 
-    # df = parse_as_df(sheet.get_all_records())
-    # log.debug(f"🔍 df: {df}")
-
-    # api_calls = plan_api_calls_df(df)
     # api_calls = plan_api_calls(rows)
     # log.debug(f"🔍 api_calls: {api_calls}")
 
     # TODO: make pure + make the API calls in bulk later?
-    # DOCS: polars version: https://docs.gspread.org/en/latest/user-guide.html#using-gspread-with-pandas
     updated_rows = process_rows(rows, sheet)
     assert len(rows) == len(updated_rows), "Number of rows should not change"
 
