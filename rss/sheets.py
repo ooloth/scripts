@@ -246,6 +246,14 @@ def mark_backlog_unread_and_return_updated_row(row: Row, entry_ids: list[EntryId
 
 def add_title_suffix_and_return_updated_row(row: Row) -> Row:
     """Append 📖 or 📺 to subscription title and return the updated row."""
+    if not isinstance(row.subscription_id, SubscriptionId):
+        return row.model_copy(
+            update={
+                "status": Status.ERROR,
+                "details": "Subscription ID must be set when adding title suffix",
+            }
+        )
+
     new_title = generate_new_title(row.subscription_id)
 
     if new_title is None:
