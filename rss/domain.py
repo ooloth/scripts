@@ -29,7 +29,7 @@ class SubscriptionTitleWithSuffix:
 
     @staticmethod
     def validate_title(value: str) -> None:
-        if not value.endswith(" 📖") and not value.endswith(" 📺"):
+        if not value.endswith((" 📖", " 📺")):
             raise ValueError("Title must end with either ' 📖' or ' 📺'")
 
 
