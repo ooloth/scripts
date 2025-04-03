@@ -287,14 +287,6 @@ def process_rows(rows: list[Row], sheet: Worksheet) -> list[Row]:
     - Make one bulk spreadsheet update at the end instead of defensively updating status throughout?
     """
 
-    # def process_row(row: Row) -> Row:
-    #     processed_row = pipe(row, process_new_row(sheet))
-    #     log.debug(f"🔍 processed_row: {processed_row}")
-
-    #     return processed_row
-
-    # return list(map(process_row, rows))
-
     processed_rows: list[Row] = []
 
     for row in rows:
@@ -398,7 +390,9 @@ def main() -> None:
 
     # TODO: make pure + make the API calls in bulk later?
     updated_rows = process_rows(rows, sheet)
-    assert len(rows) == len(updated_rows), "Number of rows should not change"
+
+    # FIXME: assertions are good before I/O, but once I/O has happened, I don't want to skip the notification
+    # assert len(rows) == len(updated_rows), "Number of rows should not change"
 
     subject, html = generate_results_email(rows, updated_rows)
     table = generate_results_table(updated_rows)
