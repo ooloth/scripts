@@ -71,7 +71,7 @@ class Game:
             if square.value == " "
         ]
 
-    def play(self):
+    def play(self) -> None:
         """
         TODO: https://www.youtube.com/watch?v=Q6CCdCBVypg
         repeat
