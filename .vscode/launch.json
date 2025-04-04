@@ -32,6 +32,6 @@
       "cwd": "${workspaceFolder}",
       "program": "${workspaceFolder}/path/to/script.sh",
       "args": []
-    },
+    }
   ]
 }
