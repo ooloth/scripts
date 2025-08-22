@@ -1,4 +1,5 @@
 # Theirs
+.DS_Store
 *.pyc
 
 # Mine
