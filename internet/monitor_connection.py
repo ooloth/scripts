@@ -3,7 +3,7 @@ import subprocess
 import time
 from datetime import datetime
 
-from common.sendgrid import send_email
+from common.pushover import send_notification
 
 # Configuration
 PING_SERVER = "8.8.8.8"
@@ -11,7 +11,7 @@ PING_COUNT = 10
 SLEEP_INTERVAL = 60  # in seconds
 LOG_FILE = "internet/ping_log.txt"
 THRESHOLD = 20  # Packet loss percentage threshold
-EMAIL_SUBJECT = "Internet Connection Alert: Packet Loss Detected"
+NOTIFICATION_TITLE = "Internet Connection Alert: Packet Loss Detected"
 
 
 def ping_server(server: str, count: int) -> str:
@@ -28,7 +28,7 @@ def extract_packet_loss(ping_output: str) -> int:
     return 0
 
 
-def log_ping_result(ping_output: str):
+def log_ping_result(ping_output: str) -> None:
     """Log the ping result to a file."""
     with open(LOG_FILE, "a") as log_file:
         log_file.write(f"{datetime.now()}\n")
@@ -36,14 +36,14 @@ def log_ping_result(ping_output: str):
         log_file.write("\n")
 
 
-def main():
+def main() -> None:
     while True:
         ping_output = ping_server(PING_SERVER, PING_COUNT)
         log_ping_result(ping_output)
 
         packet_loss = extract_packet_loss(ping_output)
         if packet_loss >= THRESHOLD:
-            send_email(EMAIL_SUBJECT, f"<pre>{ping_output}</pre>")
+            send_notification(title=NOTIFICATION_TITLE, html=f"<pre>{ping_output}</pre>")
 
         time.sleep(SLEEP_INTERVAL)
 
