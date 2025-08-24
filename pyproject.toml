@@ -12,12 +12,13 @@
     "google-auth>=2.36.0",
     "gspread>=6.1.4",
     "polars>=1.16.0",
+    "pushover-complete>=2.0.0",
     "pydantic>=2.9.2",
     "requests>=2.32.3",
     "rich>=13.9.3",
     "sendgrid>=6.11.0",
     "typer>=0.12.5",
-  ]
+]
 
 [dependency-groups]
   dev = [
