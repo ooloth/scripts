@@ -4,8 +4,8 @@ import typer
 from playwright.sync_api import sync_playwright
 
 from common.logs import log
+from common.pushover import send_notification
 from common.secrets import get_secret
-from common.sendgrid import send_email
 from common.typer import DryRun
 
 app = typer.Typer(no_args_is_help=True)
@@ -56,21 +56,17 @@ def restart(dry_run: DryRun = False) -> None:
     dry_run = os.getenv("DRY_RUN") == "true" or dry_run
 
     try:
-        _log_in_and_restart(
-            modem_url,
-            modem_password,
-            dry_run=dry_run,
-        )
-        send_email(
-            "✅ Modem restarted",
-            "<p>Modem restarted. 📡 ↪️</p>",
+        _log_in_and_restart(modem_url, modem_password, dry_run=dry_run)
+        send_notification(
+            title="✅ Modem restarted",
+            html="<p>Modem restarted. 📡 ↪️</p>",
             dry_run=dry_run,
         )
     except Exception as e:
         log.error("🚨 Modem restart failed")
-        send_email(
-            "🚨 Modem restart failed",
-            f"<p>Modem restart failed.</p><p><strong>Error:</strong></p><hr /><pre>{e}</pre>",
+        send_notification(
+            title="🚨 Modem restart failed",
+            html=f"<p>Modem restart failed.</p><p><strong>Error:</strong></p><hr /><pre>{e}</pre>",
             dry_run=dry_run,
         )
 
