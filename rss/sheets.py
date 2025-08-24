@@ -38,8 +38,8 @@ from rich.console import Console
 from rich.table import Table
 
 from common.logs import log
+from common.pushover import send_notification
 from common.secrets import get_secret
-from common.sendgrid import send_email
 from rss.domain import EntryId, FeedId, FeedUrl, Subscription, SubscriptionId
 from rss.entries.list.feedbin import GetFeedEntriesResult, get_feed_entries
 from rss.entries.mark_unread.feedbin import CreateUnreadEntriesResult, create_unread_entries
@@ -321,14 +321,21 @@ def process_rows(rows: list[Row], sheet: Worksheet) -> list[Row]:
     return processed_rows
 
 
-def generate_results_email(original_rows: list[Row], updated_rows: list[Row]) -> tuple[str, str]:
+Title = str
+Html = str
+
+
+def generate_results_notification(
+    _original_rows: list[Row],
+    updated_rows: list[Row],
+) -> tuple[Title, Html]:
     """
     Generate the email subject and HTML body for the results.
 
     TODO:
     - [ ] Identify the rows that changed status this run and just call out those changes + any outstanding actions.
     """
-    subject = "✅ RSS Feed Wish List Updated"
+    title = "✅ RSS Feed Wish List Updated"
 
     def group_rows_by_status(rows: list[Row]) -> dict[str, list[Row]]:
         """Sort rows by status, then group by status."""
@@ -351,7 +358,7 @@ def generate_results_email(original_rows: list[Row], updated_rows: list[Row]) ->
     rows_by_status = group_rows_by_status(updated_rows)
     html = generate_html(rows_by_status)
 
-    return subject, html
+    return title, html
 
 
 def generate_results_table(rows: list[Row]) -> Table:
@@ -394,11 +401,11 @@ def main() -> None:
     # FIXME: assertions are good before I/O, but once I/O has happened, I don't want to skip the notification
     # assert len(rows) == len(updated_rows), "Number of rows should not change"
 
-    subject, html = generate_results_email(rows, updated_rows)
+    title, html = generate_results_notification(rows, updated_rows)
     table = generate_results_table(updated_rows)
 
     # I/O
-    send_email(subject, html)
+    send_notification(title=title, html=html)
     console = Console()
     console.print(table)
 
