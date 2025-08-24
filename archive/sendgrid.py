@@ -9,7 +9,7 @@ from common.secrets import get_secret
 OP_ITEM = "SendGrid"
 OP_FIELD = "api key"
 
-_client = None
+_client: SendGridAPIClient | None = None
 
 
 def get_client() -> SendGridAPIClient:
