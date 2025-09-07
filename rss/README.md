@@ -1,6 +1,6 @@
 ## Deprecated
 
-The Feedbin browser extension has now made this API-based workflow redundant. Which is a good thing!
+The [Feedbin browser extension](https://github.com/feedbin/feedbin-extension) has now made this API-based workflow redundant. Which is a good thing!
 
 ## Rules:
 
