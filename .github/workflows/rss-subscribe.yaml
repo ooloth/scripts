@@ -1,7 +1,6 @@
 on:
   # see: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows
-  schedule:
-    - cron: "0 9 * * *"  # every day at 9:00 AM UTC (4:00 AM EDT, 3:00 AM EST)
+  # NOTE: used to schedule every day until the Feedbin browser extension made this whole batch workflow unnecessary
   workflow_dispatch: # allow manual triggering
 
 jobs:
@@ -33,7 +32,7 @@ jobs:
 
       # TODO: narrow to the relevant tests for this action
       # - name: Run tests
-        # run: uv run pytest tests
+      # run: uv run pytest tests
 
       # See: https://github.com/1Password/install-cli-action
       - name: Install 1Password CLI

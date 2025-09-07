@@ -1,3 +1,7 @@
+## Deprecated
+
+The Feedbin browser extension has now made this API-based workflow redundant. Which is a good thing!
+
 ## Rules:
 
 - Each request starts a new pipeline
@@ -7,4 +11,5 @@
 - Prefer type aliases that use ubiquitous domain language over primitive types
 
 Sources:
+
 - (add Scott Wlaschin talks)
