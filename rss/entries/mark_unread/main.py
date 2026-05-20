@@ -23,7 +23,7 @@ def main(entry_ids: list[EntryId]) -> None:
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: PYTHONPATH=. uv run rss/entries/mark_unready/main.py <entry-id,entry-id>")
+        print("Usage: PYTHONPATH=. uv run rss/entries/mark_unread/main.py <entry-id,entry-id>")
         sys.exit(1)
 
     log.debug("🔪 Parsing entry IDs")
