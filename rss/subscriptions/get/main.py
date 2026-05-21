@@ -1,9 +1,4 @@
-"""
-Entry point for updating an existing RSS feed subscription.
-
-TODO:
- - Update tag
-"""
+"""Entry point for getting an existing RSS feed subscription."""
 
 import sys
 
