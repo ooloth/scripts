@@ -35,6 +35,7 @@
 
 [tool.pytest.ini_options]
   addopts = "--quiet --showlocals -vv"
+  pythonpath = ["."]
 
 [tool.ruff]
   line-length = 100
