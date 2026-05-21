@@ -10,13 +10,14 @@ import typer
 
 from common.logs import log
 from common.typer import DryRun
-from rss.domain import FeedOption
+from rss.domain import EntryId, FeedId, FeedOption, FeedUrl
+from rss.entries.list.feedbin import get_feed_entries
+from rss.entries.mark_unread.feedbin import create_unread_entries
+from rss.subscriptions.add.feedbin import CreateSubscriptionResult, create_subscription
 
-subscriptions_app = typer.Typer(no_args_is_help=True)
 entries_app = typer.Typer(no_args_is_help=True)
 
 app = typer.Typer(no_args_is_help=True)
-app.add_typer(subscriptions_app, name="subscriptions")
 app.add_typer(entries_app, name="entries")
 
 
@@ -49,34 +50,30 @@ def add(url: str, mark_backlog_unread: MarkUnread = False, dry_run: DryRun = Fal
         log.warning("🌵 Skipping subscription (dry run)")
         typer.Exit()
 
-    try:
-        new_subscription = add_subscription(url)
-    except MultipleChoicesError as e:
-        chosen_feed = _ask_for_feed_choice(e.choices)
-        new_subscription = add_subscription(chosen_feed.feed_url)
+    result, data = create_subscription(FeedUrl(url))
 
-    log.info("🔍 Counting backlog entries")
-    entries = get_feed_entries(new_subscription.feed_id)
-    entry_ids = [entry.id for entry in entries]
+    if result == CreateSubscriptionResult.MULTIPLE_CHOICES:
+        assert isinstance(data, list)
+        chosen_feed = _ask_for_feed_choice(data)
+        result, data = create_subscription(chosen_feed.feed_url)
 
-    mark_backlog_unread = typer.confirm(
-        f"🔖 There are {len(entry_ids)} backlog entries. Mark all as unread?", abort=True
-    )
+    if result not in (CreateSubscriptionResult.CREATED, CreateSubscriptionResult.EXISTS):
+        log.error(f"{result.value}: {data}")
+        raise typer.Exit(code=1)
 
-    if not mark_backlog_unread:
-        rich.print("👋 You're all set!")
-        return
-
-    mark_entries_unread(entry_ids)
-
-    # TODO: get all entry ids for this subscription via get_feed_entries
-    # TODO: mark all entries as unread via https://github.com/feedbin/feedbin-api/blob/master/content/unread-entries.md#create-unread-entries-mark-as-unread
-
-    # log.debug(f"subscriptions = {subscriptions}")
+    rich.print(f"✅ {result.value}")
 
 
-subscriptions_app.command(name="list")(list_subscriptions)
-entries_app.command(name="mark-unread", no_args_is_help=True)(mark_entries_unread)
-entries_app.command(name="list", no_args_is_help=True)(get_feed_entries)
+@entries_app.command("list", no_args_is_help=True)
+def list_entries(feed_id: int) -> None:
+    result, data = get_feed_entries(FeedId(feed_id))
+    log.info(f"{result.value}: {data}")
+
+
+@entries_app.command("mark-unread", no_args_is_help=True)
+def mark_entries_unread(entry_ids: list[int]) -> None:
+    ids = [EntryId(i) for i in entry_ids]
+    result, data = create_unread_entries(ids)
+    log.info(f"{result.value}: {data}")
 
 # michaeluloth.com = feed_id: 2338770
