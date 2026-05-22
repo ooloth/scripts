@@ -10,7 +10,7 @@ import typer
 
 from common.logs import log
 from common.typer import DryRun
-from rss.domain import FeedOption
+from rss.domain import EntryId, FeedId, FeedOption
 
 subscriptions_app = typer.Typer(no_args_is_help=True)
 entries_app = typer.Typer(no_args_is_help=True)
@@ -21,6 +21,27 @@ app.add_typer(entries_app, name="entries")
 
 
 MarkUnread = Annotated[bool, typer.Option("--unread", "-u", help="Mark backlog unread")]
+
+
+def list_subscriptions() -> None:
+    """List all Feedbin RSS feed subscriptions."""
+    log.info("📋 Listing subscriptions")
+
+
+def mark_entries_unread(entry_ids: list[EntryId]) -> None:
+    """Mark one or more feed entries as unread by their entry IDs."""
+    from rss.entries.mark_unread.feedbin import create_unread_entries
+
+    result, data = create_unread_entries(entry_ids)
+    log.info(result.value)
+
+
+def get_feed_entries(feed_id: FeedId) -> None:
+    """List all entries for an RSS feed subscription by its feed ID."""
+    from rss.entries.list.feedbin import get_feed_entries as _get_feed_entries
+
+    result, data = _get_feed_entries(feed_id)
+    log.info(result.value)
 
 
 def _ask_for_feed_choice(feeds: list[FeedOption]) -> FeedOption:
@@ -75,8 +96,8 @@ def add(url: str, mark_backlog_unread: MarkUnread = False, dry_run: DryRun = Fal
     # log.debug(f"subscriptions = {subscriptions}")
 
 
-subscriptions_app.command(name="list")(list_subscriptions)
-entries_app.command(name="mark-unread", no_args_is_help=True)(mark_entries_unread)
-entries_app.command(name="list", no_args_is_help=True)(get_feed_entries)
+subscriptions_app.command(name="list", help="List all Feedbin RSS feed subscriptions.")(list_subscriptions)
+entries_app.command(name="mark-unread", no_args_is_help=True, help="Mark one or more feed entries as unread by their entry IDs.")(mark_entries_unread)
+entries_app.command(name="list", no_args_is_help=True, help="List all entries for an RSS feed subscription by its feed ID.")(get_feed_entries)
 
 # michaeluloth.com = feed_id: 2338770
