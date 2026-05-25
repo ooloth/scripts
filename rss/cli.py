@@ -10,7 +10,7 @@ import typer
 
 from common.logs import log
 from common.typer import DryRun
-from rss.domain import EntryId, FeedId, FeedOption
+from rss.domain import Entry, EntryId, FeedId, FeedOption
 
 subscriptions_app = typer.Typer(no_args_is_help=True)
 entries_app = typer.Typer(no_args_is_help=True)
@@ -36,12 +36,13 @@ def mark_entries_unread(entry_ids: list[EntryId]) -> None:
     log.info(result.value)
 
 
-def get_feed_entries(feed_id: FeedId) -> None:
+def get_feed_entries(feed_id: FeedId) -> GetFeedEntriesOutput:
     """List all entries for an RSS feed subscription by its feed ID."""
     from rss.entries.list.feedbin import get_feed_entries as _get_feed_entries
 
-    result, data = _get_feed_entries(feed_id)
+    result, entries = _get_feed_entries(feed_id)
     log.info(result.value)
+    return result, entries
 
 
 def _ask_for_feed_choice(feeds: list[FeedOption]) -> FeedOption:
@@ -77,7 +78,11 @@ def add(url: str, mark_backlog_unread: MarkUnread = False, dry_run: DryRun = Fal
         new_subscription = add_subscription(chosen_feed.feed_url)
 
     log.info("🔍 Counting backlog entries")
-    entries = get_feed_entries(new_subscription.feed_id)
+    from rss.entries.list.feedbin import GetFeedEntriesResult
+    result, entries = get_feed_entries(new_subscription.feed_id)
+    if result != GetFeedEntriesResult.OK:
+        log.error(result.value)
+        raise typer.Exit(1)
     entry_ids = [entry.id for entry in entries]
 
     mark_backlog_unread = typer.confirm(
