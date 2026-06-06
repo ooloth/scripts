@@ -21,7 +21,7 @@ def fmap(f: Callable[[_A], _B], xs: list[_A]) -> list[_B]:
 
 
 def flatten(xs: list[list[_A]]) -> list[_A]:
-    return reduce(lambda acc, nested: acc + nested, xs)
+    return reduce(lambda acc, nested: acc + nested, xs, [])
     # return list(chain.from_iterable(xs))
 
 
