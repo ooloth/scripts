@@ -20,8 +20,8 @@ import modem.restart as modem_cli
 import rss.cli as rss_cli
 
 app = typer.Typer(no_args_is_help=True)
-app.add_typer(rss_cli.app, name="rss")
-app.add_typer(modem_cli.app, name="modem")
+app.add_typer(rss_cli.app, name="rss", help="Manage Feedbin RSS subscriptions and entries.")
+app.add_typer(modem_cli.app, name="modem", help="Manage the modem.")
 
 
 if __name__ == "__main__":
