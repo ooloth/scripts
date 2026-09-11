@@ -26,7 +26,7 @@ def append_suffix(title: SubscriptionTitle, url: Url) -> SubscriptionTitleWithSu
     if title.endswith(" 📖") or title.endswith(" 📺"):
         return SubscriptionTitleWithSuffix(title=title)
 
-    return SubscriptionTitleWithSuffix(title=f"{title} {choose_suffix(url)}")
+    return SubscriptionTitleWithSuffix(title=SubscriptionTitle(f"{title} {choose_suffix(url)}"))
 
 
 def generate_new_title(subscription_id: SubscriptionId) -> SubscriptionTitleWithSuffix | None:
@@ -68,9 +68,11 @@ if __name__ == "__main__":
         )
         sys.exit(1)
 
-    subscription_id = SubscriptionId(sys.argv[1])
+    subscription_id = SubscriptionId(int(sys.argv[1]))
     optional_new_title = (
-        SubscriptionTitleWithSuffix(title=sys.argv[2]) if len(sys.argv) > 2 else None
+        SubscriptionTitleWithSuffix(title=SubscriptionTitle(sys.argv[2]))
+        if len(sys.argv) > 2
+        else None
     )
 
     main(subscription_id, optional_new_title)

@@ -90,7 +90,7 @@ class Game:
         until exit selected
         """
         while self.winner is None:
-            choice = input(f"Player {self.current_player.symbol} enter your choice: ")
+            input(f"Player {self.current_player.symbol} enter your choice: ")
             print(self.board.render())
             pass
         pass

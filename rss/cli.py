@@ -3,9 +3,7 @@ CLI adapter for Feedbin. All usage of typer should occur in this module.
 """
 
 import os
-from typing import Annotated
 
-import rich
 import typer
 
 from common.logs import log
@@ -21,16 +19,13 @@ app = typer.Typer(no_args_is_help=True)
 app.add_typer(entries_app, name="entries", help="Manage RSS feed entries.")
 
 
-MarkUnread = Annotated[bool, typer.Option("--unread", "-u", help="Mark backlog unread")]
-
-
 def _ask_for_feed_choice(feeds: list[FeedOption]) -> FeedOption:
     """Prompt the user to choose between multiple feeds."""
     print("Multiple feeds found. Please choose one:")
     for idx, feed in enumerate(feeds, start=1):
         print(f"{idx}. {feed.title} ({feed.feed_url})")
 
-    choice = typer.prompt("Which feed number would you like to subscribe to?", type=int)
+    choice: int = typer.prompt("Which feed number would you like to subscribe to?", type=int)
     if 1 <= choice <= len(feeds):
         selected_feed = feeds[choice - 1]
         log.info(f"🔖 Selected feed URL: {selected_feed.feed_url}")
@@ -41,8 +36,12 @@ def _ask_for_feed_choice(feeds: list[FeedOption]) -> FeedOption:
 
 
 @app.command("add", no_args_is_help=True)
-def add(url: str, mark_backlog_unread: MarkUnread = False, dry_run: DryRun = False) -> None:
-    """Subscribe to an RSS feed by its website or feed URL."""
+def add(url: str, dry_run: DryRun = False) -> None:
+    """Subscribe to an RSS feed by its website or feed URL.
+
+    To mark the feed's backlog as unread afterwards, pipe its entries into
+    mark-unread: `rss entries list <feed_id> | xargs rss entries mark-unread`.
+    """
     dry_run = os.getenv("DRY_RUN", "").lower() == "true" or dry_run
 
     if dry_run:
@@ -62,19 +61,27 @@ def add(url: str, mark_backlog_unread: MarkUnread = False, dry_run: DryRun = Fal
         log.error(f"{result.value}: {data}")
         raise typer.Exit(code=1)
 
-    rich.print(result.value)
+    log.info(result.value)
 
 
 @entries_app.command("list", no_args_is_help=True)
 def list_entries(feed_id: int) -> None:
-    """List all entries for an RSS feed subscription by its feed ID."""
+    """List all entries for an RSS feed subscription by its feed ID.
+
+    Writes one entry ID per line to stdout so the output pipes into
+    mark-unread. Everything else goes to stderr.
+    """
     result, data = get_feed_entries(FeedId(feed_id))
 
     if result != GetFeedEntriesResult.OK:
         log.error(f"{result.value}: {data}")
         raise typer.Exit(code=1)
 
-    log.info(f"{result.value}: {data}")
+    assert isinstance(data, list)
+    for entry in data:
+        print(entry.id)
+
+    log.info(f"{result.value}: {len(data)}")
 
 
 @entries_app.command("mark-unread", no_args_is_help=True)

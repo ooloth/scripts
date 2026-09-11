@@ -13,9 +13,9 @@ class GetFeedEntriesResult(str, Enum):
     OK = "✅ Feed entries found"
     FORBIDDEN = "⛔️ You are not subscribed to this feed"
     NOT_FOUND = "⛔️ No feed found with that ID"
-    UNEXPECTED_STATUS_CODE = "🚨 Unexpected status code while marking entries as unread"
-    HTTP_ERROR = "🚨 HTTP error while marking entries as unread"
-    UNEXPECTED_ERROR = "🚨 Unexpected error while marking entries as unread"
+    UNEXPECTED_STATUS_CODE = "🚨 Unexpected status code while listing feed entries"
+    HTTP_ERROR = "🚨 HTTP error while listing feed entries"
+    UNEXPECTED_ERROR = "🚨 Unexpected error while listing feed entries"
 
 
 GetFeedEntriesOutput = (

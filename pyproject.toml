@@ -32,6 +32,11 @@
 
 [tool.mypy]
   strict = true
+  # The repo has no __init__.py files, so packages are implicit namespace packages.
+  # Without this, mypy names each module by its basename, seven feedbin.py collide,
+  # and it aborts before type-checking anything at all.
+  explicit_package_bases = true
+  mypy_path = "."
 
 [tool.pytest.ini_options]
   addopts = "--quiet --showlocals -vv"

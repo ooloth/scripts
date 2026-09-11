@@ -1,14 +1,18 @@
 from dataclasses import dataclass
+from typing import NewType
 
 from pydantic import BaseModel
 
-EntryId = int
-FeedId = int
-FeedTitle = str
-FeedUrl = str
-SubscriptionId = int
-SubscriptionTitle = str
-Url = str
+# NewType rather than a plain alias: `EntryId = int` names the concept but lets any
+# int through, so `get_feed_entries(entry_id)` type-checks. NewType makes the name
+# carry the distinction the domain rules ask for.
+EntryId = NewType("EntryId", int)
+FeedId = NewType("FeedId", int)
+FeedTitle = NewType("FeedTitle", str)
+FeedUrl = NewType("FeedUrl", str)
+SubscriptionId = NewType("SubscriptionId", int)
+SubscriptionTitle = NewType("SubscriptionTitle", str)
+Url = NewType("Url", str)
 
 
 class Entry(BaseModel):

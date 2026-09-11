@@ -1,13 +1,26 @@
 """Tests for the CLI entry point and the rss sub-commands it exposes."""
 
 import logging
+import re
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
 from typer.testing import CliRunner
 
 from cli import app
-from rss.domain import FeedOption, Subscription
+from rss.domain import (
+    Entry,
+    EntryId,
+    FeedId,
+    FeedOption,
+    FeedTitle,
+    FeedUrl,
+    Subscription,
+    SubscriptionId,
+    SubscriptionTitle,
+    Url,
+)
 from rss.entries.list.feedbin import GetFeedEntriesResult
 from rss.entries.mark_unread.feedbin import CreateUnreadEntriesResult, UnreadEntriesResponse
 from rss.subscriptions.add.feedbin import CreateSubscriptionResult
@@ -16,11 +29,11 @@ runner = CliRunner()
 
 # What Feedbin hands back once it has a feed: the subscription it stored.
 SUBSCRIPTION = Subscription(
-    feed_id=2338770,
-    feed_url="https://example.com/feed.xml",
-    id=1,
-    site_url="https://example.com",
-    title="Example",
+    feed_id=FeedId(2338770),
+    feed_url=Url("https://example.com/feed.xml"),
+    id=SubscriptionId(1),
+    site_url=Url("https://example.com"),
+    title=SubscriptionTitle("Example"),
 )
 
 # A subscription that Feedbin would happily create, so a dry run that wrongly reaches
@@ -28,8 +41,12 @@ SUBSCRIPTION = Subscription(
 CREATED_SUBSCRIPTION = (CreateSubscriptionResult.CREATED, SUBSCRIPTION)
 
 # The two feeds Feedbin offers when a site advertises more than one.
-FEED_OPTION_A = FeedOption(feed_url="https://example.com/posts.xml", title="Example posts")
-FEED_OPTION_B = FeedOption(feed_url="https://example.com/notes.xml", title="Example notes")
+FEED_OPTION_A = FeedOption(
+    feed_url=FeedUrl("https://example.com/posts.xml"), title=FeedTitle("Example posts")
+)
+FEED_OPTION_B = FeedOption(
+    feed_url=FeedUrl("https://example.com/notes.xml"), title=FeedTitle("Example notes")
+)
 
 # The wording typer.confirm() echoes before a real subscription is created. A dry run
 # must never reach it, so its absence from the output is what "non-interactive" means.
@@ -43,15 +60,53 @@ CONFIRMATION_ANSWER = "y\n"
 NOT_A_DRY_RUN = {"DRY_RUN": "false"}
 
 
-def reported_failures(caplog: pytest.LogCaptureFixture) -> str:
-    """Everything a command told the user went wrong.
+def reported_at(caplog: pytest.LogCaptureFixture, level: int) -> str:
+    """Everything a command told the user at one log level.
 
-    Rich wraps console output to the terminal width, so the log records are the only
-    place the failure text survives intact.
+    Status goes to the log, which Rich renders on stderr and wraps to the terminal
+    width, so the records are the only place the text survives intact. Filtering by
+    level matters: asserting on the whole log would match a success message when
+    testing a failure.
     """
-    return "\n".join(
-        record.getMessage() for record in caplog.records if record.levelno == logging.ERROR
-    )
+    return "\n".join(record.getMessage() for record in caplog.records if record.levelno == level)
+
+
+def reported_failures(caplog: pytest.LogCaptureFixture) -> str:
+    """Everything a command reported as an error."""
+    return reported_at(caplog, logging.ERROR)
+
+
+def reported_progress(caplog: pytest.LogCaptureFixture) -> str:
+    """Everything a command reported as normal progress."""
+    return reported_at(caplog, logging.INFO)
+
+
+RSS_README = Path(__file__).parent.parent / "rss" / "README.md"
+
+# A documented command line looks like "rss entries list <feed-id>   List entries for a feed".
+# The command path is the leading words before the first <placeholder> or the description.
+DOCUMENTED_COMMAND = re.compile(r"^rss((?: [a-z][a-z-]*)+)")
+
+
+def documented_rss_commands() -> list[list[str]]:
+    """The command paths rss/README.md tells a reader they can run."""
+    return [
+        ["rss", *match.group(1).split()]
+        for line in RSS_README.read_text().splitlines()
+        if (match := DOCUMENTED_COMMAND.match(line.strip()))
+    ]
+
+
+def test_readme_documents_only_real_commands() -> None:
+    """Every command rss/README.md lists must exist, so the docs cannot go stale unnoticed."""
+    documented = documented_rss_commands()
+
+    # Guard the parser itself: a regex that silently matches nothing would pass vacuously.
+    assert ["rss", "entries", "mark-unread"] in documented
+
+    for command in documented:
+        result = runner.invoke(app, [*command, "--help"])
+        assert result.exit_code == 0, f"rss/README.md documents `{' '.join(command)}`, which fails"
 
 
 def test_help_lists_rss_and_modem_commands() -> None:
@@ -106,7 +161,7 @@ def test_dry_run_environment_variable_is_case_insensitive(dry_run_value: str) ->
     assert result.exit_code == 0
 
 
-def test_subscribing_to_a_new_feed_exits_zero() -> None:
+def test_subscribing_to_a_new_feed_exits_zero(caplog: pytest.LogCaptureFixture) -> None:
     """A feed Feedbin subscribes to must succeed the command and say so once."""
     with patch("rss.cli.create_subscription", return_value=CREATED_SUBSCRIPTION):
         result = runner.invoke(
@@ -118,11 +173,27 @@ def test_subscribing_to_a_new_feed_exits_zero() -> None:
 
     # The result values already begin with the check mark, so printing one alongside
     # them says "✅ ✅ Subscription created". One check mark means one is being added.
-    assert result.output.count("✅") == 1
+    assert reported_progress(caplog).count("✅") == 1
     assert result.exit_code == 0
 
 
-def test_subscribing_to_an_already_subscribed_feed_exits_zero() -> None:
+def test_subscribing_writes_nothing_to_stdout(caplog: pytest.LogCaptureFixture) -> None:
+    """`add` reports status, not data, so stdout stays free for commands that pipe."""
+    with patch("rss.cli.create_subscription", return_value=CREATED_SUBSCRIPTION):
+        result = runner.invoke(
+            app,
+            ["rss", "add", "https://example.com"],
+            input=CONFIRMATION_ANSWER,
+            env=NOT_A_DRY_RUN,
+        )
+
+    assert CreateSubscriptionResult.CREATED.value in reported_progress(caplog)
+    assert CreateSubscriptionResult.CREATED.value not in result.output
+
+
+def test_subscribing_to_an_already_subscribed_feed_exits_zero(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """A feed the user already subscribes to must succeed the command, not fail it."""
     with patch(
         "rss.cli.create_subscription",
@@ -135,7 +206,7 @@ def test_subscribing_to_an_already_subscribed_feed_exits_zero() -> None:
             env=NOT_A_DRY_RUN,
         )
 
-    assert CreateSubscriptionResult.EXISTS.value in result.output
+    assert CreateSubscriptionResult.EXISTS.value in reported_progress(caplog)
     assert result.exit_code == 0
 
 
@@ -200,6 +271,17 @@ def test_listing_entries_of_an_existing_feed_exits_zero() -> None:
     assert result.exit_code == 0
 
 
+def test_listing_entries_writes_one_id_per_line_to_stdout() -> None:
+    """`entries list` output has to pipe into `mark-unread`, so stdout carries bare IDs."""
+    entries = [Entry(id=EntryId(11)), Entry(id=EntryId(22)), Entry(id=EntryId(33))]
+
+    with patch("rss.cli.get_feed_entries", return_value=(GetFeedEntriesResult.OK, entries)):
+        result = runner.invoke(app, ["rss", "entries", "list", "999"])
+
+    assert result.output.split() == ["11", "22", "33"]
+    assert result.exit_code == 0
+
+
 def test_marking_entries_unread_exits_non_zero_when_feedbin_errors(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -216,7 +298,7 @@ def test_marking_entries_unread_exits_non_zero_when_feedbin_errors(
 
 def test_marking_entries_unread_exits_zero_on_success() -> None:
     """Entries Feedbin accepts as unread must succeed the command."""
-    marked_unread = UnreadEntriesResponse(marked_as_unread=[123], not_marked_as_unread=[])
+    marked_unread = UnreadEntriesResponse(marked_as_unread=[EntryId(123)], not_marked_as_unread=[])
 
     with patch(
         "rss.cli.create_unread_entries",
