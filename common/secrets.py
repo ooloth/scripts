@@ -37,16 +37,40 @@ def build_secret_reference(item: str, field: str) -> str:
 PasswordOrStringifiedJson = str
 
 
+class SecretUnavailable(RuntimeError):
+    """A 1Password reference could not be read.
+
+    Environmental, not a bug: the item is misnamed, the field is missing, the
+    vault is not shared with this account, or nobody is signed in.
+    """
+
+
 def get_secret(item: str, field: str) -> PasswordOrStringifiedJson:
     """
     Generate a 1Password secret reference and retrieve the secret's value.
+
+    Raises SecretUnavailable naming the reference that failed. Callers log the
+    message, so it says which reference and what 1Password said about it, not
+    just that a subprocess exited non-zero. The reference is a pointer rather
+    than a value, so it is safe to put in a message; the secret never is.
     """
     secret_reference = build_secret_reference(item, field)
 
-    result = subprocess.run(
-        ["op", "read", secret_reference],
-        capture_output=True,
-        text=True,
-        check=True,
-    )
+    try:
+        result = subprocess.run(
+            ["op", "read", secret_reference],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+    except FileNotFoundError as e:
+        raise SecretUnavailable(
+            f"Could not read {secret_reference}: the 1Password CLI is not installed. "
+            "See https://developer.1password.com/docs/cli/get-started/"
+        ) from e
+    except subprocess.CalledProcessError as e:
+        raise SecretUnavailable(
+            f"Could not read {secret_reference}: {e.stderr.strip() or 'op exited ' + str(e.returncode)}"
+        ) from e
+
     return result.stdout.strip()

@@ -21,4 +21,4 @@ if __name__ == "__main__":
         print("Usage: PYTHONPATH=. uv run rss/subscriptions/get/main.py <subscription_id>")
         sys.exit(1)
 
-    main(SubscriptionId(sys.argv[1]))
+    main(SubscriptionId(int(sys.argv[1])))

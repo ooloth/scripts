@@ -4,6 +4,7 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from typing import Literal
 
+from rich.console import Console
 from rich.logging import RichHandler
 
 # TODO: https://calmcode.io/course/logging/rich
@@ -54,7 +55,13 @@ def get_logger() -> logging.Logger:
             format="%(message)s",
             datefmt="[%X]",
             handlers=[
-                RichHandler(rich_tracebacks=True, tracebacks_show_locals=True),
+                # Logs go to stderr so stdout carries only a command's data, and
+                # `rss entries list <id> | xargs ...` pipes ids rather than log lines.
+                RichHandler(
+                    console=Console(stderr=True),
+                    rich_tracebacks=True,
+                    tracebacks_show_locals=True,
+                ),
                 file_handler(level="debug"),
                 file_handler(level="error"),
             ],

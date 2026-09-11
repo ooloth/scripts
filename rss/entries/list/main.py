@@ -21,4 +21,4 @@ if __name__ == "__main__":
         print("Usage: PYTHONPATH=. uv run rss/entries/list/main.py <feed_id>")
         sys.exit(1)
 
-    main(FeedId(sys.argv[1]))
+    main(FeedId(int(sys.argv[1])))

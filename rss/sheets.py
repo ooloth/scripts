@@ -122,16 +122,19 @@ def parse_rows(unparsed_rows: list[UnparsedRow]) -> list[Row]:
         """Comes in as all caps TRUE/FALSE; needs to go out as a bool later."""
         return value == "TRUE"
 
-    def parse_int(value: SheetsCellValue) -> int | Literal[""]:
-        return int(value) if value else ""
+    def parse_subscription_id(value: SheetsCellValue) -> SubscriptionId | Literal[""]:
+        return SubscriptionId(int(value)) if value else ""
+
+    def parse_feed_id(value: SheetsCellValue) -> FeedId | Literal[""]:
+        return FeedId(int(value)) if value else ""
 
     return [
         Row(
             index=i,
-            url=parse_str(row[ColumnName.URL]),
+            url=FeedUrl(parse_str(row[ColumnName.URL])),
             status=Status(row[ColumnName.STATUS]) if row[ColumnName.STATUS] else Status.NEW,
-            subscription_id=parse_int(row[ColumnName.SUBSCRIPTION_ID]),
-            feed_id=parse_int(row[ColumnName.FEED_ID]),
+            subscription_id=parse_subscription_id(row[ColumnName.SUBSCRIPTION_ID]),
+            feed_id=parse_feed_id(row[ColumnName.FEED_ID]),
             details=parse_str(row[ColumnName.DETAILS]),
             subscribed=parse_checkbox(row.get(ColumnName.SUBSCRIBED, "")),
             marked_unread=parse_checkbox(row.get(ColumnName.MARKED_UNREAD, "")),
@@ -216,7 +219,7 @@ def mark_backlog_unread_and_return_updated_row(row: Row, entry_ids: list[EntryId
 
 def add_title_suffix_and_return_updated_row(row: Row) -> Row:
     """Append 📖 or 📺 to subscription title and return the updated row."""
-    if not isinstance(row.subscription_id, SubscriptionId):
+    if not isinstance(row.subscription_id, int):
         return row.model_copy(
             update={
                 "status": Status.ERROR,
@@ -297,7 +300,7 @@ def process_rows(rows: list[Row], sheet: Worksheet) -> list[Row]:
             update_row(row=processed_row, row_index=processed_row.index, sheet=sheet)
             log.debug(f"🔍 updated_row: {processed_row}")
 
-        if row.marked_unread is False and isinstance(processed_row.feed_id, FeedId):
+        if row.marked_unread is False and isinstance(processed_row.feed_id, int):
             result, entries = get_feed_entries(feed_id=processed_row.feed_id)
             if result != GetFeedEntriesResult.OK or not isinstance(entries, list):
                 processed_row = processed_row.model_copy(update={"details": f"{result}: {entries}"})
@@ -311,7 +314,7 @@ def process_rows(rows: list[Row], sheet: Worksheet) -> list[Row]:
             log.debug(f"🔍 updated_row: {processed_row}")
             update_row(row=processed_row, row_index=processed_row.index, sheet=sheet)
 
-        if row.suffix_added is False and isinstance(processed_row.subscription_id, SubscriptionId):
+        if row.suffix_added is False and isinstance(processed_row.subscription_id, int):
             processed_row = add_title_suffix_and_return_updated_row(processed_row)
             log.debug(f"🔍 updated_row: {processed_row}")
             update_row(row=processed_row, row_index=processed_row.index, sheet=sheet)

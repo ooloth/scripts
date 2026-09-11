@@ -1,0 +1,47 @@
+name: checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+
+    steps:
+      # See: https://github.com/actions/checkout
+      - uses: actions/checkout@v4
+
+      # See: https://docs.astral.sh/uv/guides/integration/github/
+      - name: Install uv and enable caching
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: pyproject.toml
+
+      - name: Install the project
+        run: uv sync --all-extras --dev
+
+      # Each step runs even if an earlier one failed, so one push reports every
+      # problem rather than only the first.
+      - name: Check formatting
+        if: '!cancelled()'
+        run: uv run ruff format --check .
+
+      - name: Lint
+        if: '!cancelled()'
+        run: uv run ruff check .
+
+      - name: Type check
+        if: '!cancelled()'
+        run: uv run mypy .
+
+      - name: Test
+        if: '!cancelled()'
+        run: uv run pytest

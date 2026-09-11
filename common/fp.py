@@ -12,8 +12,8 @@ from expression import pipe
 
 from common.logs import log
 
-_A = TypeVar("A")
-_B = TypeVar("B")
+_A = TypeVar("_A")
+_B = TypeVar("_B")
 
 
 def fmap(f: Callable[[_A], _B], xs: list[_A]) -> list[_B]:

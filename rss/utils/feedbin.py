@@ -12,6 +12,13 @@ from common.secrets import get_secret
 
 API = "https://api.feedbin.com/v2"
 
+# The title of the 1Password item in the Scripts vault, which is "Feedbin API"
+# rather than "Feedbin". Named here, as common/pushover.py does, so the two
+# lookups below cannot drift apart.
+OP_ITEM = "Feedbin API"
+OP_FIELD_USERNAME = "username"
+OP_FIELD_PASSWORD = "password"
+
 
 _auth = None
 
@@ -21,8 +28,8 @@ def _get_auth() -> tuple[str, str]:
     global _auth
 
     if _auth is None:
-        username = get_secret("Feedbin", "username")
-        password = get_secret("Feedbin", "password")
+        username = get_secret(OP_ITEM, OP_FIELD_USERNAME)
+        password = get_secret(OP_ITEM, OP_FIELD_PASSWORD)
         _auth = (username, password)
 
     return _auth

@@ -27,6 +27,6 @@ if __name__ == "__main__":
         sys.exit(1)
 
     log.debug("🔪 Parsing entry IDs")
-    entry_ids = [EntryId(id) for id in sys.argv[1].split(",")]
+    entry_ids = [EntryId(int(id)) for id in sys.argv[1].split(",")]
 
     main(entry_ids)
